@@ -119,9 +119,10 @@ Then use `http://localhost:8081` instead.
 → Double-check your API key in `application.properties`. Make sure there are no extra spaces.
 
 **STS/Eclipse: "Could not find or load main class"**
-→ The project wasn't imported as a Maven project. Fix:
-1. Right-click project → **Maven → Update Project** → check "Force Update" → OK
-2. Right-click project → **Run As → Spring Boot App**
-
-If "Spring Boot App" doesn't appear, re-import:
-File → Import → Maven → Existing Maven Projects → browse to the project folder → Finish
+→ STS can't find the JDK. Fix:
+1. Right-click project → **Build Path → Configure Build Path**
+2. Go to the **Libraries** tab
+3. Click **Add Library** → **JRE System Library** → **Installed JREs**
+4. Click **Add** → **Standard VM** → browse to your JDK installation folder (e.g. `C:\Program Files\Eclipse Adoptium\jdk-25...`)
+5. Click **Finish** → **Apply and Close**
+6. Right-click project → **Run As → Spring Boot App**
