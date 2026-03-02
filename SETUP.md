@@ -117,3 +117,11 @@ Then use `http://localhost:8081` instead.
 
 **API key error / 400 Bad Request from Gemini**
 → Double-check your API key in `application.properties`. Make sure there are no extra spaces.
+
+**STS/Eclipse: "Could not find or load main class"**
+→ The project wasn't imported as a Maven project. Fix:
+1. Right-click project → **Maven → Update Project** → check "Force Update" → OK
+2. Right-click project → **Run As → Spring Boot App**
+
+If "Spring Boot App" doesn't appear, re-import:
+File → Import → Maven → Existing Maven Projects → browse to the project folder → Finish
