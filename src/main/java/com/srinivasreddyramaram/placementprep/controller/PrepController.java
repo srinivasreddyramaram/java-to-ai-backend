@@ -40,14 +40,15 @@ public class PrepController {
      * Try it: POST http://localhost:8080/prep?topic=Arrays
      */
     @PostMapping
-    public ResponseEntity<?> generateQuestions(@RequestParam String topic) {
+    public ResponseEntity<PrepSession> generateQuestions(@RequestParam String topic) {
         // TODO: What happens if someone sends an empty topic?
-        // Uncomment the block below to return a 400 Bad Request instead of calling the AI.
-    	//if (topic == null || topic.isBlank()) {
-            return ResponseEntity.badRequest().body("Topic cannot be empty");
-        //}
+        // Try: POST http://localhost:8080/prep?topic=
+        // Then uncomment the block below and see the difference.
+//        if (topic == null || topic.isBlank()) {
+//            return ResponseEntity.badRequest().body("Topic cannot be empty");
+//        }
         PrepSession session = prepService.generateQuestions(topic);
-        return ResponseEntity.ok(session); // sends back HTTP 200 with the saved session as JSON
+        return ResponseEntity.ok(session);
     }
 
     /**
