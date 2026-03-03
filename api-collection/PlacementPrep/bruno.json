@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "PlacementPrep",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
