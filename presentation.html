@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>From Java to AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #080812; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  #topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px; background: #0f0f1e; border-bottom: 1px solid #1e1e3a; flex-shrink: 0; }
+  #topbar .title { font-size: 13px; color: #555; }
+  #topbar .controls { display: flex; gap: 10px; align-items: center; }
+  #topbar button { background: #1a1a2e; border: 1px solid #2a2a4a; color: #aaa; padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  #topbar button:hover { background: #6c63ff; border-color: #6c63ff; color: #fff; }
+  #topbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+  #topbar .counter { font-size: 12px; color: #555; min-width: 60px; text-align: center; }
+
+  #progress { height: 3px; background: #1e1e3a; flex-shrink: 0; }
+  #progressBar { height: 100%; background: linear-gradient(90deg, #6c63ff, #ff6b9d); transition: width 0.4s ease; }
+
+  #main { display: flex; flex: 1; overflow: hidden; }
+  #slideArea { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; overflow: hidden; }
+
+  .slide { display: none; background: #1a1a2e; border-radius: 16px; padding: 40px 50px; width: 100%; max-width: 860px; height: 100%; max-height: 560px; position: relative; border: 1px solid #2a2a4a; box-shadow: 0 8px 40px rgba(0,0,0,0.6); flex-direction: column; justify-content: center; overflow: hidden; }
+  .slide.active { display: flex; animation: slideIn 0.32s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes slideInR { from { opacity:0; transform:translateX(-30px); } to { opacity:1; transform:translateX(0); } }
+
+  .slide-num { position: absolute; top: 16px; right: 20px; font-size: 11px; color: #333; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #6c63ff; margin-bottom: 10px; font-weight: 600; }
+  .slide h2 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .tagline { font-size: 13px; color: #6c63ff; margin-bottom: 16px; font-style: italic; }
+
+  /* Code */
+  .code-wrap { background: #0d0d1a; border-radius: 10px; border: 1px solid #2a2a4a; overflow: hidden; margin: 10px 0; flex: 1; display: flex; flex-direction: column; }
+  .code-header { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #12121f; border-bottom: 1px solid #2a2a4a; flex-shrink: 0; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .code-lang { margin-left: auto; font-size: 11px; color: #444; font-family: monospace; }
+  .code { padding: 20px 26px; font-family: 'Consolas', monospace; font-size: 17px; line-height: 2.1; color: #d4d4d4; overflow-x: auto; white-space: pre; flex: 1; }
+
+  /* Tokens */
+  .kw { color: #569cd6; } .cl { color: #4ec9b0; } .fn { color: #dcdcaa; }
+  .ann { color: #c792ea; } .str { color: #ce9178; } .cm { color: #6a9955; font-style: italic; }
+  .num { color: #b5cea8; } .prop { color: #9cdcfe; }
+  .hl-bad { color: #f48771; } .hl-good { color: #6bffb8; }
+  .ln { color: #404060; user-select: none; margin-right: 16px; font-size: 12px; display: inline-block; width: 18px; text-align: right; }
+
+  /* Two code cols */
+  .code-cols { display: flex; gap: 14px; flex: 1; margin: 8px 0; }
+  .code-col { flex: 1; display: flex; flex-direction: column; }
+  .code-col-label { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 5px; margin-bottom: 6px; flex-shrink: 0; }
+  .code-col.bad .code-col-label { background: #f4877118; color: #f48771; }
+  .code-col.good .code-col-label { background: #6bffb818; color: #6bffb8; }
+  .code-col .code-wrap { flex: 1; }
+  .code-col .code { font-size: 15px; line-height: 2; }
+
+  .info-bar { font-size: 12px; color: #a0a0c0; margin-top: 12px; background: #0d0d1a; border-radius: 6px; padding: 8px 14px; flex-shrink: 0; }
+
+  /* Title */
+  .slide-title h1 { font-size: 52px; font-weight: 800; line-height: 1.1; }
+  .slide-title h1 span { color: #6c63ff; }
+  .slide-title .sub { font-size: 16px; color: #a0a0c0; margin-top: 12px; }
+  .slide-title .handle { margin-top: 24px; font-size: 13px; color: #444; }
+  .tag { display: inline-block; background: #6c63ff18; color: #6c63ff; border: 1px solid #6c63ff33; border-radius: 20px; padding: 3px 12px; font-size: 12px; margin-right: 6px; margin-top: 14px; }
+
+  /* Hook */
+  .hook-list { list-style: none; margin-top: 16px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .hook-list li { font-size: 22px; color: #c8d3f5; padding: 12px 0; border-bottom: 1px solid #1e1e3a; }
+  .hook-list li:last-child { border: none; color: #6bffb8; font-weight: 700; font-size: 24px; margin-top: 8px; }
+
+  /* Ann list */
+  .ann-list { list-style: none; margin-top: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-around; }
+  .ann-list li { display: flex; align-items: center; gap: 16px; padding: 11px 0; border-bottom: 1px solid #1e1e3a; font-size: 15px; color: #c8d3f5; }
+  .ann-list li:last-child { border-bottom: none; }
+  .badge { background: #c792ea18; color: #c792ea; border: 1px solid #c792ea33; border-radius: 5px; padding: 3px 10px; font-family: monospace; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+
+  /* Layers */
+  .layers { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; margin-top: 8px; }
+  .layer { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-radius: 8px; font-size: 15px; }
+  .layer .emoji { font-size: 20px; } .layer .name { font-weight: 600; flex: 1; } .layer .desc { color: #a0a0c0; font-size: 13px; }
+  .layer.l1 { background: #6c63ff18; border: 1px solid #6c63ff33; }
+  .layer.l2 { background: #ff6b9d18; border: 1px solid #ff6b9d33; }
+  .layer.l3 { background: #6bffb818; border: 1px solid #6bffb833; }
+  .layer.l4 { background: #ffcb6b18; border: 1px solid #ffcb6b33; }
+  .arr { text-align: center; color: #333; font-size: 14px; }
+
+  /* Flow */
+  .flow { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; margin-top: 8px; }
+  .flow-box { background: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 8px; padding: 11px 16px; font-size: 14px; color: #c8d3f5; }
+  .flow-box .ann-tag { color: #c792ea; font-size: 11px; display: block; margin-bottom: 2px; font-family: monospace; }
+  .flow-arr { text-align: center; color: #6c63ff; font-size: 16px; }
+
+  /* Checklist */
+  .checklist { list-style: none; margin-top: 12px; }
+  .checklist li { font-size: 17px; color: #c8d3f5; padding: 9px 0; display: flex; gap: 12px; border-bottom: 1px solid #1e1e3a; }
+  .checklist li:last-child { border: none; }
+  .check { color: #6bffb8; }
+  .next-list { margin-top: 14px; list-style: none; }
+  .next-list li { font-size: 14px; color: #a0a0c0; padding: 6px 0; display: flex; gap: 10px; }
+  .arr-r { color: #6c63ff; }
+
+  /* BA */
+  .ba-cols { display: flex; gap: 16px; flex: 1; margin-top: 14px; }
+  .ba-col { flex: 1; display: flex; flex-direction: column; }
+  .ba-col h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .ba-col.before h4 { color: #f48771; } .ba-col.after h4 { color: #6bffb8; }
+  .ba-col ul { list-style: none; }
+  .ba-col ul li { font-size: 14px; color: #a0a0c0; padding: 8px 0; border-bottom: 1px solid #1e1e3a; }
+
+  /* Demo */
+  .demo-center { text-align: center; width: 100%; }
+  .demo-center h2 { font-size: 38px; margin-bottom: 12px; }
+  .demo-repo { font-family: monospace; font-size: 13px; color: #6bffb8; background: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 8px; padding: 14px 24px; margin: 20px auto; display: inline-block; }
+  .demo-cmd { font-family: monospace; font-size: 22px; color: #ffcb6b; margin-top: 16px; }
+
+  /* Notes */
+  #notesPanel { width: 280px; background: #0f0f1e; border-left: 1px solid #1e1e3a; display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease; overflow: hidden; }
+  #notesPanel.hidden { width: 0; border: none; }
+  #notesHeader { padding: 12px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #555; border-bottom: 1px solid #1e1e3a; flex-shrink: 0; }
+  #notesContent { flex: 1; overflow-y: auto; padding: 16px; font-size: 13px; line-height: 1.7; color: #a0a0c0; }
+  #notesContent strong { color: #fff; display: block; margin-bottom: 8px; font-size: 14px; }
+  #notesContent .tip { background: #6c63ff12; border-left: 3px solid #6c63ff; padding: 8px 12px; border-radius: 4px; margin-top: 12px; font-size: 12px; color: #9090c0; }
+
+  body.fs #topbar { display: none; }
+  body.fs #notesPanel { display: none; }
+  body.fs .slide { max-width: 100%; border-radius: 0; border: none; max-height: 100%; padding: 50px 70px; }
+  body.fs #slideArea { padding: 0; background: #1a1a2e; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="title">From Java to AI — Malla Reddy University</div>
+  <div class="controls">
+    <button id="prevBtn" onclick="changeSlide(-1)" disabled>← Prev</button>
+    <span class="counter" id="counter">1 / 14</span>
+    <button id="nextBtn" onclick="changeSlide(1)">Next →</button>
+    <button onclick="toggleNotes()">📋 Notes</button>
+    <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+  </div>
+</div>
+<div id="progress"><div id="progressBar" style="width:7.14%"></div></div>
+
+<div id="main">
+<div id="slideArea">
+
+<!-- 1: Title -->
+<div class="slide active" id="slide-1">
+  <div class="slide-num">1 / 14</div>
+  <h1 style="font-size:52px;font-weight:800;line-height:1.1;">From Java<br/><span style="color:#6c63ff;">to AI</span></h1>
+  <div style="font-size:16px;color:#a0a0c0;margin-top:12px;">Building an AI-powered app with Spring Boot + Google Gemini</div>
+  <div style="margin-top:14px;">
+    <span class="tag">Hands-on Workshop</span>
+    <span class="tag">3rd Year IT</span>
+    <span class="tag">Malla Reddy University</span>
+  </div>
+  <div style="margin-top:24px;font-size:13px;color:#444;">@srinivasreddyramaram</div>
+</div>
+
+<!-- 2: Hook -->
+<div class="slide" id="slide-2">
+  <div class="slide-num">2 / 14</div>
+  <div class="section-label">Let's start here</div>
+  <h2>You already know Java.</h2>
+  <ul class="hook-list">
+    <li>You can write a class.</li>
+    <li>You can write a method.</li>
+    <li>You know what an object is.</li>
+    <li>✅ That's all you need for today.</li>
+  </ul>
+</div>
+
+<!-- 3: Problem -->
+<div class="slide" id="slide-3">
+  <div class="slide-num">3 / 14</div>
+  <div class="section-label">The Problem</div>
+  <h2>This is how we all start 😅</h2>
+  <div class="code-wrap">
+    <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+    <div class="code"><span class="ln">1</span><span class="kw">public class</span> <span class="cl">Main</span> {
+<span class="ln">2</span>  <span class="kw">public static void</span> <span class="fn">main</span>(<span class="cl">String</span>[] args) {
+<span class="ln">3</span>
+<span class="ln">4</span>    <span class="cm">// connect to database here</span>
+<span class="ln">5</span>    <span class="cm">// call an API here</span>
+<span class="ln">6</span>    <span class="cm">// validate input here</span>
+<span class="ln">7</span>    <span class="cm">// save to file here</span>
+<span class="ln">8</span>    <span class="cm">// everything here 😬</span>
+<span class="ln">9</span>  }
+<span class="ln">10</span>}</div>
+  </div>
+  <div class="info-bar">❌ Works for assignments. Nightmare in a team of 50 engineers.</div>
+</div>
+
+<!-- 4: Spring Boot -->
+<div class="slide" id="slide-4">
+  <div class="slide-num">4 / 14</div>
+  <div class="section-label">Spring Boot</div>
+  <h2>Java + Superpowers</h2>
+  <div class="tagline">"Handles the boring stuff so you focus on the real stuff."</div>
+  <div class="code-cols">
+    <div class="code-col bad">
+      <div class="code-col-label">❌ Without Spring Boot</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code"><span class="hl-bad">Setup web server manually
+Write JDBC boilerplate
+Configure Tomcat XML
+Manage object lifecycles
+Handle HTTP parsing</span></div>
+      </div>
+    </div>
+    <div class="code-col good">
+      <div class="code-col-label">✅ With Spring Boot</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code"><span class="cm">// Spring handles all that ↑</span>
+
+
+<span class="cm">// You only write:</span>
+<span class="hl-good">business logic.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5: DI -->
+<div class="slide" id="slide-5">
+  <div class="slide-num">5 / 14</div>
+  <div class="section-label">Concept 1</div>
+  <h2>Dependency Injection</h2>
+  <div class="tagline">"Stop newing, start receiving"</div>
+  <div class="code-cols">
+    <div class="code-col bad">
+      <div class="code-col-label">❌ Plain Java</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+        <div class="code"><span class="cl">PrepService</span> service
+  <span class="op">=</span> <span class="kw">new</span> <span class="cl">PrepService</span>();
+
+<span class="cm">// you manage the object</span>
+<span class="cm">// you manage lifecycle</span>
+<span class="cm">// you manage everything</span></div>
+      </div>
+    </div>
+    <div class="code-col good">
+      <div class="code-col-label">✅ Spring</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+        <div class="code"><span class="kw">public</span> <span class="fn">PrepController</span>(
+    <span class="cl">PrepService</span> <span class="prop">service</span>) {
+
+  <span class="kw">this</span>.<span class="prop">service</span> <span class="op">=</span> service;
+  <span class="cm">// handed to you ✅</span>
+}</div>
+      </div>
+    </div>
+  </div>
+  <div class="info-bar">🍕 You don't grow wheat to make pizza. Zomato delivers. Spring delivers.</div>
+</div>
+
+<!-- 6: Annotations → Beans (merged) -->
+<div class="slide" id="slide-6">
+  <div class="slide-num">6 / 14</div>
+  <div class="section-label">Concept 2</div>
+  <h2>Annotations → Beans</h2>
+  <div class="tagline">"You annotate. Spring creates. You receive."</div>
+  <div class="code-cols">
+    <div class="code-col bad" style="flex:1.1;">
+      <div class="code-col-label">📌 You write — annotation</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+        <div class="code"><span class="ann">@Service</span>
+<span class="kw">public class</span> <span class="cl">PrepService</span> {
+  <span class="cm">// your logic here</span>
+}
+
+<span class="ann">@Repository</span>
+<span class="kw">public class</span> <span class="cl">PrepRepo</span> {
+  <span class="cm">// your DB code</span>
+}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;font-size:26px;color:#6c63ff;padding:0 6px;flex-shrink:0;">→</div>
+    <div class="code-col good" style="flex:1.1;">
+      <div class="code-col-label">🫘 Spring does — creates bean</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code"><span class="cm">// reads annotation at startup</span>
+<span class="cm">// creates the object</span>
+<span class="cm">// stores in container</span>
+<span class="cm">// injects where needed</span>
+
+
+<span class="hl-good">You never call new. Ever.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-bar">
+    <span class="badge">@Service</span>&nbsp; business logic &nbsp;·&nbsp;
+    <span class="badge">@Repository</span>&nbsp; data access &nbsp;·&nbsp;
+    <span class="badge">@RestController</span>&nbsp; HTTP &nbsp;·&nbsp;
+    <span class="badge">@Entity</span>&nbsp; DB table
+  </div>
+</div>
+
+<!-- 7: Layered Architecture -->
+<div class="slide" id="slide-7">
+  <div class="slide-num">7 / 14</div>
+  <div class="section-label">Concept 3</div>
+  <h2>Layered Architecture</h2>
+  <div class="tagline">"Everyone does ONE job"</div>
+  <div class="layers">
+    <div class="layer l1"><span class="emoji">🧑‍💼</span><span class="name">Controller</span><span class="desc">receives the HTTP request — nothing else</span></div>
+    <div class="arr">↓</div>
+    <div class="layer l2"><span class="emoji">👨‍🍳</span><span class="name">Service</span><span class="desc">processes business logic — calls AI, applies rules</span></div>
+    <div class="arr">↓</div>
+    <div class="layer l3"><span class="emoji">🗄️</span><span class="name">Repository</span><span class="desc">talks to the database — save, fetch, delete</span></div>
+    <div class="arr">↓</div>
+    <div class="layer l4"><span class="emoji">💾</span><span class="name">Database</span><span class="desc">stores the data permanently</span></div>
+  </div>
+</div>
+
+<!-- 8: JPA -->
+<div class="slide" id="slide-8">
+  <div class="slide-num">8 / 14</div>
+  <div class="section-label">Concept 4</div>
+  <h2>Spring Data JPA</h2>
+  <div class="tagline">"Database without writing SQL"</div>
+  <div class="code-cols">
+    <div class="code-col bad">
+      <div class="code-col-label">❌ Old way — JDBC</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+        <div class="code" style="font-size:12px;"><span class="cl">Connection</span> conn <span class="op">=</span>
+  <span class="cl">DriverManager</span>
+    .<span class="fn">getConnection</span>(<span class="str">"..."</span>);
+<span class="cl">PreparedStatement</span> stmt
+  <span class="op">=</span> conn.<span class="fn">prepareStatement</span>(<span class="str">"..."</span>);
+<span class="cl">ResultSet</span> rs
+  <span class="op">=</span> stmt.<span class="fn">executeQuery</span>();
+<span class="cm">// ...15 more lines</span></div>
+      </div>
+    </div>
+    <div class="code-col good">
+      <div class="code-col-label">✅ Spring Data JPA</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+        <div class="code">repository.<span class="fn">findAll</span>()
+
+repository.<span class="fn">save</span>(session)
+
+repository.<span class="fn">findById</span>(<span class="num">1L</span>)
+
+<span class="cm">// extend JpaRepository</span>
+<span class="cm">// get these FREE ✅</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9: REST API -->
+<div class="slide" id="slide-9">
+  <div class="slide-num">9 / 14</div>
+  <div class="section-label">Concept 5</div>
+  <h2>REST API</h2>
+  <div class="tagline">"Your Java methods become URLs"</div>
+  <div class="code-wrap">
+    <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+    <div class="code"><span class="ann">@PostMapping</span>(<span class="str">"/prep"</span>)
+<span class="kw">public</span> <span class="cl">PrepSession</span> <span class="fn">generate</span>(
+    <span class="ann">@RequestParam</span> <span class="cl">String</span> <span class="prop">topic</span>) {
+  <span class="kw">return</span> prepService.<span class="fn">prep</span>(topic);
+}
+
+<span class="cm">// ↓ becomes this URL</span>
+
+POST http://localhost:<span class="num">8080</span>/prep?topic=<span class="str">Arrays</span></div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;flex-shrink:0;">
+    <span class="tag">GET → read</span><span class="tag">POST → create</span><span class="tag">PUT → update</span><span class="tag">DELETE → remove</span>
+  </div>
+</div>
+
+<!-- 10: application.properties -->
+<div class="slide" id="slide-10">
+  <div class="slide-num">10 / 14</div>
+  <div class="section-label">Concept 6</div>
+  <h2>application.properties</h2>
+  <div class="tagline">"One file to rule them all"</div>
+  <div class="code-cols">
+    <div class="code-col bad">
+      <div class="code-col-label">❌ Hardcoded — dangerous</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Java</span></div>
+        <div class="code"><span class="cl">String</span> <span class="prop">key</span>
+  <span class="op">=</span> <span class="str">"AIzaSy1234..."</span>;
+
+<span class="cl">String</span> <span class="prop">url</span>
+  <span class="op">=</span> <span class="str">"http://prod-server"</span>;
+
+<span class="cm">// pushed to GitHub 😬</span></div>
+      </div>
+    </div>
+    <div class="code-col good">
+      <div class="code-col-label">✅ Properties file</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">properties</span></div>
+        <div class="code"><span class="prop">gemini.api.key</span>=YOUR_KEY
+
+<span class="prop">gemini.api.url</span>=https://...
+
+<span class="prop">spring.h2.console</span>=<span class="hl-good">true</span>
+
+<span class="cm"># change without touching code ✅</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11: Full Picture -->
+<div class="slide" id="slide-11">
+  <div class="slide-num">11 / 14</div>
+  <div class="section-label">Putting it together</div>
+  <h2>The Full Picture</h2>
+  <div class="flow">
+    <div class="flow-box">POST /prep?topic=Arrays &nbsp;&nbsp;<span style="color:#555;">← student sends this</span></div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-box"><span class="ann-tag">@RestController</span>PrepController — receives request, calls service</div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-box"><span class="ann-tag">@Service</span>PrepService — calls Gemini AI → gets 5 questions → saves to DB</div>
+    <div class="flow-arr">↓</div>
+    <div class="flow-box"><span class="ann-tag">@Repository</span>PrepSessionRepository → H2 Database → returns saved session</div>
+  </div>
+</div>
+
+<!-- 12: Before/After -->
+<div class="slide" id="slide-12">
+  <div class="slide-num">12 / 14</div>
+  <div class="section-label">Before vs After</div>
+  <h2>What Spring Boot replaces</h2>
+  <div class="ba-cols">
+    <div class="ba-col before">
+      <h4>❌ Before Spring Boot</h4>
+      <ul>
+        <li>Setup web server manually</li>
+        <li>Write JDBC boilerplate</li>
+        <li>Configure Tomcat XML files</li>
+        <li>Manage object lifecycles</li>
+        <li>Handle HTTP parsing by hand</li>
+      </ul>
+    </div>
+    <div class="ba-col after">
+      <h4>✅ After Spring Boot</h4>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">shell</span></div>
+        <div class="code" style="text-align:center;padding:20px 16px;font-size:14px;"><span class="cm">// In Spring Tool Suite (STS):</span>
+
+Right-click project
+  → <span class="hl-good">Run As</span>
+  → <span class="hl-good">Spring Boot App</span>
+
+<span class="cm">// App starts on port 8080 ✅</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13: Demo -->
+<div class="slide" id="slide-13">
+  <div class="slide-num">13 / 14</div>
+  <div class="demo-center">
+    <div style="font-size:50px;margin-bottom:12px;">🛠️</div>
+    <h2>Enough slides.<br/>Let's BUILD it.</h2>
+    <div class="demo-repo">github.com/srinivasreddyramaram/java-to-ai-backend</div>
+
+  </div>
+</div>
+
+<!-- 14: Closing -->
+<div class="slide" id="slide-14">
+  <div class="slide-num">14 / 14</div>
+  <div class="section-label">You did it 🎉</div>
+  <h2>What you built today</h2>
+  <ul class="checklist">
+    <li><span class="check">✅</span> A Spring Boot REST API</li>
+    <li><span class="check">✅</span> Connected to Google Gemini AI</li>
+    <li><span class="check">✅</span> Saves history to a database</li>
+    <li><span class="check">✅</span> Tested with a real API client</li>
+  </ul>
+  <div style="margin-top:18px;font-size:11px;color:#6c63ff;font-weight:600;text-transform:uppercase;letter-spacing:1px;">What to explore next</div>
+  <ul class="next-list">
+    <li><span class="arr-r">→</span> Connect a frontend — HTML, React, or any framework</li>
+    <li><span class="arr-r">→</span> Try other AI APIs — Claude, OpenAI</li>
+  </ul>
+</div>
+
+</div><!-- slideArea -->
+
+<!-- Notes -->
+<div id="notesPanel">
+  <div id="notesHeader">🎤 Speaker Notes</div>
+  <div id="notesContent"></div>
+</div>
+</div><!-- main -->
+
+<script>
+const total = 14, notes = {
+  1:  { title:"Opening",                body:"Introduce yourself — SriRam, 11+ years at Loyalty Methods, Hyderabad. Keep it short.", tip:"Show energy. Sets the tone for 3 hours." },
+  2:  { title:"The Hook",               body:"Pause after 'That's all you need for today.' Let it land. Reassure nervous students early.", tip:"Ask who has written a Java class. Everyone raises their hand." },
+  3:  { title:"The Problem",            body:"Ask who has written code like this. Everyone has. Relatable, not shameful.", tip:"Works for assignments. Nightmare in a team of 50." },
+  4:  { title:"Spring Boot",            body:"Swiggy, Razorpay, PhonePe all run on Spring Boot. Use real company names.", tip:"Don't go into Spring vs Spring Boot history. Stay practical." },
+  5:  { title:"Dependency Injection",   body:"You never call new on a service yourself. Spring figures out what to give you.", tip:"The Zomato analogy lands really well with Indian students." },
+  6:  { title:"Annotations → Beans",    body:"This is the key insight: annotations are the cause, beans are the effect. @Service tells Spring to create a managed object and inject it wherever needed.", tip:"Draw on whiteboard: @Service → Spring Container → Bean → Injected." },
+  7:  { title:"Layered Architecture",   body:"Open the project. Show the 4 packages. Each file does exactly one job.", tip:"This is what interviewers mean by 'clean architecture'." },
+  8:  { title:"Spring Data JPA",        body:"JpaRepository is an interface. Spring generates SQL at runtime. Show H2 console live.", tip:"This is what abstraction looks like in practice." },
+  9:  { title:"REST API",               body:"Open Postman. Hit the endpoint live. Java method → HTTP URL. That's the moment it clicks.", tip:"Test POST /prep?topic=Java live on the projector." },
+  10: { title:"application.properties", body:"Never hardcode secrets. API keys in code get pushed to GitHub and compromised.", tip:"Tell a story about a leaked key. Makes it memorable." },
+  11: { title:"Full Picture",           body:"Every component maps to a class they'll write. Walk through slowly.", tip:"Draw this on the whiteboard alongside the slide." },
+  12: { title:"Before vs After",        body:"Spring Boot auto-configures everything. In STS: right-click → Run As → Spring Boot App.", tip:"That simplicity — one click to run — is the whole point." },
+  13: { title:"Demo Time",              body:"Let students clone, run, and hit their own API. First AI response = dopamine hit.", tip:"Walk around the room. Keep energy high." },
+  14: { title:"Closing",                body:"End with the SIP analogy — same compounding logic applies to skills. Start early.", tip:"Leave 15 min for Q&A. Students always have questions they were too shy to ask." }
+};
+
+let cur = 1, notesVisible = true;
+
+function updateNotes() {
+  const n = notes[cur];
+  document.getElementById('notesContent').innerHTML =
+    `<strong>${n.title}</strong>${n.body}<div class="tip">💡 ${n.tip}</div>`;
+}
+
+function changeSlide(dir) {
+  const next = cur + dir;
+  if (next < 1 || next > total) return;
+  document.getElementById('slide-' + cur).style.display = 'none';
+  cur = next;
+  const el = document.getElementById('slide-' + cur);
+  el.style.display = 'flex';
+  el.style.animation = dir > 0 ? 'slideIn 0.32s ease' : 'slideInR 0.32s ease';
+  document.getElementById('counter').textContent = cur + ' / ' + total;
+  document.getElementById('prevBtn').disabled = cur === 1;
+  document.getElementById('nextBtn').disabled = cur === total;
+  document.getElementById('progressBar').style.width = ((cur / total) * 100) + '%';
+  updateNotes();
+}
+
+function toggleNotes() {
+  notesVisible = !notesVisible;
+  document.getElementById('notesPanel').classList.toggle('hidden', !notesVisible);
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); document.body.classList.add('fs'); }
+  else { document.exitFullscreen(); document.body.classList.remove('fs'); }
+}
+
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('fs'); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') changeSlide(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   changeSlide(-1);
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  if (e.key === 'n' || e.key === 'N') toggleNotes();
+});
+
+updateNotes();
+</script>
+</body>
+</html>
