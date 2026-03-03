@@ -41,12 +41,6 @@ public class PrepController {
      */
     @PostMapping
     public ResponseEntity<PrepSession> generateQuestions(@RequestParam String topic) {
-        // TODO: What happens if someone sends an empty topic?
-        // Try: POST http://localhost:8080/prep?topic=
-        // Then uncomment the block below and see the difference.
-//        if (topic == null || topic.isBlank()) {
-//            return ResponseEntity.badRequest().body("Topic cannot be empty");
-//        }
         PrepSession session = prepService.generateQuestions(topic);
         return ResponseEntity.ok(session);
     }
