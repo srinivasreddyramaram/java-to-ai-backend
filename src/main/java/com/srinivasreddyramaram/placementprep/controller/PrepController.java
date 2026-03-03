@@ -18,7 +18,10 @@ public class PrepController {
     }
 
     @PostMapping
-    public ResponseEntity<PrepSession> generateQuestions(@RequestParam String topic) {
+    public ResponseEntity<?> generateQuestions(@RequestParam String topic) {
+        if (topic == null || topic.isBlank()) {
+            return ResponseEntity.badRequest().body("Topic cannot be empty");
+        }
         return ResponseEntity.ok(prepService.generateQuestions(topic));
     }
 
