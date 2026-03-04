@@ -59,10 +59,6 @@
   .info-bar { font-size: 12px; color: #a0a0c0; margin-top: 12px; background: #0d0d1a; border-radius: 6px; padding: 8px 14px; flex-shrink: 0; }
 
   /* Title */
-  .slide-title h1 { font-size: 52px; font-weight: 800; line-height: 1.1; }
-  .slide-title h1 span { color: #6c63ff; }
-  .slide-title .sub { font-size: 16px; color: #a0a0c0; margin-top: 12px; }
-  .slide-title .handle { margin-top: 24px; font-size: 13px; color: #444; }
   .tag { display: inline-block; background: #6c63ff18; color: #6c63ff; border: 1px solid #6c63ff33; border-radius: 20px; padding: 3px 12px; font-size: 12px; margin-right: 6px; margin-top: 14px; }
 
   /* Hook */
@@ -70,16 +66,13 @@
   .hook-list li { font-size: 22px; color: #c8d3f5; padding: 12px 0; border-bottom: 1px solid #1e1e3a; }
   .hook-list li:last-child { border: none; color: #6bffb8; font-weight: 700; font-size: 24px; margin-top: 8px; }
 
-  /* Ann list */
-  .ann-list { list-style: none; margin-top: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-around; }
-  .ann-list li { display: flex; align-items: center; gap: 16px; padding: 11px 0; border-bottom: 1px solid #1e1e3a; font-size: 15px; color: #c8d3f5; }
-  .ann-list li:last-child { border-bottom: none; }
+  /* Badge */
   .badge { background: #c792ea18; color: #c792ea; border: 1px solid #c792ea33; border-radius: 5px; padding: 3px 10px; font-family: monospace; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
 
   /* Layers */
   .layers { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; margin-top: 8px; }
   .layer { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-radius: 8px; font-size: 15px; }
-  .layer .emoji { font-size: 20px; } .layer .name { font-weight: 600; flex: 1; } .layer .desc { color: #a0a0c0; font-size: 13px; }
+  .layer .emoji { font-size: 20px; } .layer .name { font-weight: 600; flex: 1; min-width: 130px; } .layer .desc { color: #a0a0c0; font-size: 13px; }
   .layer.l1 { background: #6c63ff18; border: 1px solid #6c63ff33; }
   .layer.l2 { background: #ff6b9d18; border: 1px solid #ff6b9d33; }
   .layer.l3 { background: #6bffb818; border: 1px solid #6bffb833; }
@@ -113,7 +106,6 @@
   .demo-center { text-align: center; width: 100%; }
   .demo-center h2 { font-size: 38px; margin-bottom: 12px; }
   .demo-repo { font-family: monospace; font-size: 13px; color: #6bffb8; background: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 8px; padding: 14px 24px; margin: 20px auto; display: inline-block; }
-  .demo-cmd { font-family: monospace; font-size: 22px; color: #ffcb6b; margin-top: 16px; }
 
   /* Notes */
   #notesPanel { width: 280px; background: #0f0f1e; border-left: 1px solid #1e1e3a; display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease; overflow: hidden; }
@@ -135,20 +127,20 @@
   <div class="title">From Java to AI — Malla Reddy University</div>
   <div class="controls">
     <button id="prevBtn" onclick="changeSlide(-1)" disabled>← Prev</button>
-    <span class="counter" id="counter">1 / 15</span>
+    <span class="counter" id="counter">1 / 16</span>
     <button id="nextBtn" onclick="changeSlide(1)">Next →</button>
     <button onclick="toggleNotes()">📋 Notes</button>
     <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
   </div>
 </div>
-<div id="progress"><div id="progressBar" style="width:6.67%"></div></div>
+<div id="progress"><div id="progressBar" style="width:6.25%"></div></div>
 
 <div id="main">
 <div id="slideArea">
 
 <!-- 1: Title -->
 <div class="slide active" id="slide-1">
-  <div class="slide-num">1 / 15</div>
+  <div class="slide-num">1 / 16</div>
   <h1 style="font-size:52px;font-weight:800;line-height:1.1;">From Java<br/><span style="color:#6c63ff;">to AI</span></h1>
   <div style="font-size:16px;color:#a0a0c0;margin-top:12px;">Building an AI-powered app with Spring Boot + Google Gemini</div>
   <div style="margin-top:14px;">
@@ -161,7 +153,7 @@
 
 <!-- 2: Hook -->
 <div class="slide" id="slide-2">
-  <div class="slide-num">2 / 15</div>
+  <div class="slide-num">2 / 16</div>
   <div class="section-label">Let's start here</div>
   <h2>You already know Java.</h2>
   <ul class="hook-list">
@@ -174,7 +166,7 @@
 
 <!-- 3: Problem -->
 <div class="slide" id="slide-3">
-  <div class="slide-num">3 / 15</div>
+  <div class="slide-num">3 / 16</div>
   <div class="section-label">The Problem</div>
   <h2>This is how we all start 😅</h2>
   <div class="code-wrap">
@@ -195,7 +187,7 @@
 
 <!-- 4: Spring Boot -->
 <div class="slide" id="slide-4">
-  <div class="slide-num">4 / 15</div>
+  <div class="slide-num">4 / 16</div>
   <div class="section-label">Spring Boot</div>
   <h2>Java + Superpowers</h2>
   <div class="tagline">"Handles the boring stuff so you focus on the real stuff."</div>
@@ -225,9 +217,9 @@ Handle HTTP parsing</span></div>
   </div>
 </div>
 
-<!-- 5: Encapsulation (OOP → Spring bridge) -->
+<!-- 5: Encapsulation -->
 <div class="slide" id="slide-5">
-  <div class="slide-num">5 / 15</div>
+  <div class="slide-num">5 / 16</div>
   <div class="section-label">OOP → Spring</div>
   <h2>Encapsulation</h2>
   <div class="tagline">"Hide the data. Control the access." — PrepSession.java in our code</div>
@@ -266,9 +258,39 @@ Handle HTTP parsing</span></div>
   <div class="info-bar">Spring & JPA call your getters/setters to read and write the database. Encapsulation is not just theory — it's required.</div>
 </div>
 
-<!-- 6: DI -->
+<!-- 6: All 4 OOP Pillars -->
 <div class="slide" id="slide-6">
-  <div class="slide-num">6 / 15</div>
+  <div class="slide-num">6 / 16</div>
+  <div class="section-label">OOP → Spring</div>
+  <h2>All 4 OOP Pillars — In Our Code</h2>
+  <div class="layers" style="gap:6px;margin-top:10px;">
+    <div class="layer l1">
+      <span class="emoji">🔒</span>
+      <span class="name">Encapsulation</span>
+      <span class="desc"><code style="color:#c792ea;font-size:12px;">PrepSession.java</code> — private fields + getters/setters</span>
+    </div>
+    <div class="layer l2">
+      <span class="emoji">🧬</span>
+      <span class="name">Inheritance</span>
+      <span class="desc"><code style="color:#c792ea;font-size:12px;">PrepSessionRepository extends JpaRepository</code> — inherits save, findAll, delete for free</span>
+    </div>
+    <div class="layer l3">
+      <span class="emoji">🎭</span>
+      <span class="name">Abstraction</span>
+      <span class="desc"><code style="color:#c792ea;font-size:12px;">JpaRepository</code> is an interface — you call <code style="color:#dcdcaa;font-size:12px;">save()</code> without writing a single line of SQL</span>
+    </div>
+    <div class="layer l4">
+      <span class="emoji">🔀</span>
+      <span class="name">Polymorphism</span>
+      <span class="desc"><code style="color:#c792ea;font-size:12px;">PrepController</code> uses <code style="color:#c792ea;font-size:12px;">PrepService</code> by type — Spring decides the concrete object at runtime</span>
+    </div>
+  </div>
+  <div class="info-bar">OOP isn't just theory. Every pillar shows up in the 4 files you're about to write.</div>
+</div>
+
+<!-- 7: DI -->
+<div class="slide" id="slide-7">
+  <div class="slide-num">7 / 16</div>
   <div class="section-label">Concept 1</div>
   <h2>Dependency Injection</h2>
   <div class="tagline">"Stop newing, start receiving"</div>
@@ -301,9 +323,9 @@ Handle HTTP parsing</span></div>
   <div class="info-bar">🍕 You don't grow wheat to make pizza. Zomato delivers. Spring delivers.</div>
 </div>
 
-<!-- 7: Annotations → Beans (merged) -->
-<div class="slide" id="slide-7">
-  <div class="slide-num">7 / 15</div>
+<!-- 8: Annotations → Beans -->
+<div class="slide" id="slide-8">
+  <div class="slide-num">8 / 16</div>
   <div class="section-label">Concept 2</div>
   <h2>Annotations → Beans</h2>
   <div class="tagline">"You annotate. Spring creates. You receive."</div>
@@ -346,9 +368,9 @@ Handle HTTP parsing</span></div>
   </div>
 </div>
 
-<!-- 8: Layered Architecture -->
-<div class="slide" id="slide-8">
-  <div class="slide-num">8 / 15</div>
+<!-- 9: Layered Architecture -->
+<div class="slide" id="slide-9">
+  <div class="slide-num">9 / 16</div>
   <div class="section-label">Concept 3</div>
   <h2>Layered Architecture</h2>
   <div class="tagline">"Everyone does ONE job"</div>
@@ -363,9 +385,9 @@ Handle HTTP parsing</span></div>
   </div>
 </div>
 
-<!-- 9: JPA -->
-<div class="slide" id="slide-9">
-  <div class="slide-num">9 / 15</div>
+<!-- 10: Spring Data JPA -->
+<div class="slide" id="slide-10">
+  <div class="slide-num">10 / 16</div>
   <div class="section-label">Concept 4</div>
   <h2>Spring Data JPA</h2>
   <div class="tagline">"Database without writing SQL"</div>
@@ -401,9 +423,9 @@ repository.<span class="fn">findById</span>(<span class="num">1L</span>)
   </div>
 </div>
 
-<!-- 10: REST API -->
-<div class="slide" id="slide-10">
-  <div class="slide-num">10 / 15</div>
+<!-- 11: REST API -->
+<div class="slide" id="slide-11">
+  <div class="slide-num">11 / 16</div>
   <div class="section-label">Concept 5</div>
   <h2>REST API</h2>
   <div class="tagline">"Your Java methods become URLs"</div>
@@ -424,9 +446,9 @@ POST http://localhost:<span class="num">8080</span>/prep?topic=<span class="str"
   </div>
 </div>
 
-<!-- 11: application.properties -->
-<div class="slide" id="slide-11">
-  <div class="slide-num">11 / 15</div>
+<!-- 12: application.properties -->
+<div class="slide" id="slide-12">
+  <div class="slide-num">12 / 16</div>
   <div class="section-label">Concept 6</div>
   <h2>application.properties</h2>
   <div class="tagline">"One file to rule them all"</div>
@@ -460,9 +482,9 @@ POST http://localhost:<span class="num">8080</span>/prep?topic=<span class="str"
   </div>
 </div>
 
-<!-- 12: Full Picture -->
-<div class="slide" id="slide-12">
-  <div class="slide-num">12 / 15</div>
+<!-- 13: Full Picture -->
+<div class="slide" id="slide-13">
+  <div class="slide-num">13 / 16</div>
   <div class="section-label">Putting it together</div>
   <h2>The Full Picture</h2>
   <div class="flow">
@@ -476,9 +498,9 @@ POST http://localhost:<span class="num">8080</span>/prep?topic=<span class="str"
   </div>
 </div>
 
-<!-- 13: Before/After -->
-<div class="slide" id="slide-13">
-  <div class="slide-num">13 / 15</div>
+<!-- 14: Before/After -->
+<div class="slide" id="slide-14">
+  <div class="slide-num">14 / 16</div>
   <div class="section-label">Before vs After</div>
   <h2>What Spring Boot replaces</h2>
   <div class="ba-cols">
@@ -495,7 +517,7 @@ POST http://localhost:<span class="num">8080</span>/prep?topic=<span class="str"
     <div class="ba-col after">
       <h4>✅ After Spring Boot</h4>
       <div class="code-wrap">
-        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">shell</span></div>
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">STS</span></div>
         <div class="code" style="text-align:center;padding:20px 16px;font-size:14px;"><span class="cm">// In Spring Tool Suite (STS):</span>
 
 Right-click project
@@ -508,20 +530,19 @@ Right-click project
   </div>
 </div>
 
-<!-- 14: Demo -->
-<div class="slide" id="slide-14">
-  <div class="slide-num">14 / 15</div>
+<!-- 15: Demo -->
+<div class="slide" id="slide-15">
+  <div class="slide-num">15 / 16</div>
   <div class="demo-center">
     <div style="font-size:50px;margin-bottom:12px;">🛠️</div>
     <h2>Enough slides.<br/>Let's BUILD it.</h2>
     <div class="demo-repo">github.com/srinivasreddyramaram/java-to-ai-backend</div>
-
   </div>
 </div>
 
-<!-- 15: Closing -->
-<div class="slide" id="slide-15">
-  <div class="slide-num">15 / 15</div>
+<!-- 16: Closing -->
+<div class="slide" id="slide-16">
+  <div class="slide-num">16 / 16</div>
   <div class="section-label">You did it 🎉</div>
   <h2>What you built today</h2>
   <ul class="checklist">
@@ -547,22 +568,23 @@ Right-click project
 </div><!-- main -->
 
 <script>
-const total = 15, notes = {
+const total = 16, notes = {
   1:  { title:"Opening",                body:"Introduce yourself — SriRam, 11+ years at Loyalty Methods, Hyderabad. Keep it short.", tip:"Show energy. Sets the tone for 3 hours." },
   2:  { title:"The Hook",               body:"Pause after 'That's all you need for today.' Let it land. Reassure nervous students early.", tip:"Ask who has written a Java class. Everyone raises their hand." },
   3:  { title:"The Problem",            body:"Ask who has written code like this. Everyone has. Relatable, not shameful.", tip:"Works for assignments. Nightmare in a team of 50." },
   4:  { title:"Spring Boot",            body:"Swiggy, Razorpay, PhonePe all run on Spring Boot. Use real company names.", tip:"Don't go into Spring vs Spring Boot history. Stay practical." },
   5:  { title:"Encapsulation",          body:"Open PrepSession.java live. Point to the private fields — topic, questions, createdAt. Ask: why private? Because JPA needs controlled access to read/write columns correctly.", tip:"This is the bridge moment: OOP they learned → Spring they're about to use." },
-  6:  { title:"Dependency Injection",   body:"You never call new on a service yourself. Spring figures out what to give you.", tip:"The Zomato analogy lands really well with Indian students." },
-  7:  { title:"Annotations → Beans",    body:"This is the key insight: annotations are the cause, beans are the effect. @Service tells Spring to create a managed object and inject it wherever needed.", tip:"Draw on whiteboard: @Service → Spring Container → Bean → Injected." },
-  8:  { title:"Layered Architecture",   body:"Open the project. Show the 4 packages. Each file does exactly one job.", tip:"This is what interviewers mean by 'clean architecture'." },
-  9:  { title:"Spring Data JPA",        body:"JpaRepository is an interface. Spring generates SQL at runtime. Show H2 console live.", tip:"This is what abstraction looks like in practice." },
-  10: { title:"REST API",               body:"Open Postman. Hit the endpoint live. Java method → HTTP URL. That's the moment it clicks.", tip:"Test POST /prep?topic=Java live on the projector." },
-  11: { title:"application.properties", body:"Never hardcode secrets. API keys in code get pushed to GitHub and compromised.", tip:"Tell a story about a leaked key. Makes it memorable." },
-  12: { title:"Full Picture",           body:"Every component maps to a class they'll write. Walk through slowly.", tip:"Draw this on the whiteboard alongside the slide." },
-  13: { title:"Before vs After",        body:"Spring Boot auto-configures everything. In STS: right-click → Run As → Spring Boot App.", tip:"That simplicity — one click to run — is the whole point." },
-  14: { title:"Demo Time",              body:"Let students clone, run, and hit their own API. First AI response = dopamine hit.", tip:"Walk around the room. Keep energy high." },
-  15: { title:"Closing",                body:"End with the SIP analogy — same compounding logic applies to skills. Start early.", tip:"Leave 15 min for Q&A. Students always have questions they were too shy to ask." }
+  6:  { title:"All 4 OOP Pillars",      body:"Walk through each row slowly. For each pillar, point to the actual file in the project. Inheritance and Abstraction both live in PrepSessionRepository — that one line does a lot.", tip:"Ask: 'Which of these did you study in your OOP course?' All 4. Now they see it in real code." },
+  7:  { title:"Dependency Injection",   body:"You never call new on a service yourself. Spring figures out what to give you.", tip:"The Zomato analogy lands really well with Indian students." },
+  8:  { title:"Annotations → Beans",    body:"This is the key insight: annotations are the cause, beans are the effect. @Service tells Spring to create a managed object and inject it wherever needed.", tip:"Draw on whiteboard: @Service → Spring Container → Bean → Injected." },
+  9:  { title:"Layered Architecture",   body:"Open the project. Show the 4 packages. Each file does exactly one job.", tip:"This is what interviewers mean by 'clean architecture'." },
+  10: { title:"Spring Data JPA",        body:"JpaRepository is an interface. Spring generates SQL at runtime. Show the repository file — it's just one line of code.", tip:"This is what abstraction looks like in practice." },
+  11: { title:"REST API",               body:"Open Postman or Bruno. Hit the endpoint live. Java method → HTTP URL. That's the moment it clicks.", tip:"Test POST /prep?topic=Java live on the projector." },
+  12: { title:"application.properties", body:"Never hardcode secrets. API keys in code get pushed to GitHub and compromised.", tip:"Tell a story about a leaked key. Makes it memorable." },
+  13: { title:"Full Picture",           body:"Every component maps to a class they'll write. Walk through slowly.", tip:"Draw this on the whiteboard alongside the slide." },
+  14: { title:"Before vs After",        body:"Spring Boot auto-configures everything. In STS: right-click → Run As → Spring Boot App.", tip:"That simplicity — one click to run — is the whole point." },
+  15: { title:"Demo Time",              body:"Let students clone, run, and hit their own API. First AI response = dopamine hit.", tip:"Walk around the room. Keep energy high." },
+  16: { title:"Closing",                body:"End with the SIP analogy — same compounding logic applies to skills. Start early.", tip:"Leave 15 min for Q&A. Students always have questions they were too shy to ask." }
 };
 
 let cur = 1, notesVisible = true;
