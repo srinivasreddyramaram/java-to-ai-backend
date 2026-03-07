@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Java. Backends. AI. You.</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #080812; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  #topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px; background: #0f0f1e; border-bottom: 1px solid #1e1e3a; flex-shrink: 0; }
+  #topbar .title { font-size: 13px; color: #555; }
+  #topbar .controls { display: flex; gap: 10px; align-items: center; }
+  #topbar button { background: #1a1a2e; border: 1px solid #2a2a4a; color: #aaa; padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  #topbar button:hover { background: #00c9a7; border-color: #00c9a7; color: #000; }
+  #topbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+  #topbar .counter { font-size: 12px; color: #555; min-width: 60px; text-align: center; }
+
+  #progress { height: 3px; background: #1e1e3a; flex-shrink: 0; }
+  #progressBar { height: 100%; background: linear-gradient(90deg, #00c9a7, #6c63ff); transition: width 0.4s ease; }
+
+  #main { display: flex; flex: 1; overflow: hidden; }
+  #slideArea { flex: 1; display: flex; align-items: stretch; justify-content: stretch; padding: 0; overflow: hidden; }
+
+  .slide { display: none; background: #1a1a2e; border-radius: 0; padding: 60px 15%; width: 100%; height: 100%; position: relative; border: none; box-shadow: none; flex-direction: column; justify-content: center; overflow: hidden; }
+  .slide.active { display: flex; animation: slideIn 0.32s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+
+  .slide-num { position: absolute; top: 16px; right: 20px; font-size: 11px; color: #333; }
+  .label { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 14px; }
+  .label.teal { color: #00c9a7; }
+  .label.purple { color: #c792ea; }
+  .label.yellow { color: #ffcb6b; }
+  .label.red { color: #f48771; }
+  .label.blue { color: #82aaff; }
+
+  h1 { font-size: 96px; font-weight: 800; line-height: 1.05; margin-bottom: 20px; }
+  h2 { font-size: 58px; font-weight: 700; color: #fff; margin-bottom: 16px; line-height: 1.15; }
+  .sub { font-size: 26px; color: #8888aa; margin-top: 12px; }
+  .tagline { font-size: 22px; color: #00c9a7; font-style: italic; margin-top: 16px; }
+  .big-stat { font-size: 100px; font-weight: 900; background: linear-gradient(135deg, #00c9a7, #6c63ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+  .big-stat-label { font-size: 22px; color: #8888aa; margin-top: 8px; }
+
+  .pill-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 20px; }
+  .pill { padding: 12px 24px; border-radius: 30px; font-size: 18px; font-weight: 600; }
+  .pill.teal { background: #003d35; color: #00c9a7; border: 1px solid #00c9a7; }
+  .pill.purple { background: #2a1a3e; color: #c792ea; border: 1px solid #c792ea; }
+  .pill.yellow { background: #3d2e00; color: #ffcb6b; border: 1px solid #ffcb6b; }
+  .pill.blue { background: #0f1e3d; color: #82aaff; border: 1px solid #82aaff; }
+  .pill.red { background: #3d1a15; color: #f48771; border: 1px solid #f48771; }
+  .pill.ghost { background: transparent; color: #555; border: 1px solid #2a2a4a; }
+
+  .card-row { display: flex; gap: 20px; margin-top: 24px; }
+  .card { flex: 1; background: #12121f; border: 1px solid #2a2a4a; border-radius: 14px; padding: 28px; }
+  .card .card-icon { font-size: 36px; margin-bottom: 12px; }
+  .card h3 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .card p { font-size: 17px; color: #8888aa; line-height: 1.5; }
+  .card.highlight { border-color: #00c9a7; }
+
+  .vs-row { display: flex; gap: 20px; align-items: stretch; margin-top: 24px; }
+  .vs-box { flex: 1; border-radius: 14px; padding: 24px; }
+  .vs-box.bad { background: #1f0f0f; border: 1px solid #f4877155; }
+  .vs-box.good { background: #0a1f1a; border: 1px solid #00c9a755; }
+  .vs-box h3 { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+  .vs-box.bad h3 { color: #f48771; }
+  .vs-box.good h3 { color: #00c9a7; }
+  .vs-box ul { list-style: none; padding: 0; }
+  .vs-box ul li { font-size: 17px; color: #aaaacc; padding: 7px 0; display: flex; align-items: flex-start; gap: 10px; line-height: 1.4; }
+  .vs-box ul li::before { flex-shrink: 0; }
+  .vs-box.bad ul li::before { content: "✗"; color: #f48771; }
+  .vs-box.good ul li::before { content: "✓"; color: #00c9a7; }
+  .vs-divider { display: flex; align-items: center; justify-content: center; font-size: 24px; color: #444; font-weight: 700; padding: 0 6px; }
+
+  .bullet-list { list-style: none; padding: 0; margin-top: 20px; }
+  .bullet-list li { font-size: 22px; color: #cccce0; padding: 12px 0; display: flex; align-items: flex-start; gap: 14px; border-bottom: 1px solid #1e1e3a; line-height: 1.4; }
+  .bullet-list li:last-child { border-bottom: none; }
+  .bullet-list li .icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+
+  .quote-box { background: #0a0a1a; border-left: 4px solid #00c9a7; border-radius: 0 10px 10px 0; padding: 24px 32px; margin: 20px 0; font-size: 28px; color: #cccce0; line-height: 1.5; font-style: italic; }
+  .quote-attr { font-size: 16px; color: #555; margin-top: 10px; font-style: normal; }
+
+  .timeline { margin-top: 24px; display: flex; flex-direction: column; gap: 14px; }
+  .timeline-item { display: flex; gap: 20px; align-items: flex-start; }
+  .timeline-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+  .timeline-dot.teal { background: #003d35; border: 2px solid #00c9a7; }
+  .timeline-dot.purple { background: #2a1a3e; border: 2px solid #c792ea; }
+  .timeline-dot.yellow { background: #3d2e00; border: 2px solid #ffcb6b; }
+  .timeline-dot.blue { background: #0f1e3d; border: 2px solid #82aaff; }
+  .timeline-content h4 { font-size: 20px; font-weight: 600; color: #fff; }
+  .timeline-content p { font-size: 16px; color: #8888aa; margin-top: 4px; }
+
+  .two-col { display: flex; gap: 48px; margin-top: 24px; align-items: flex-start; }
+  .two-col .col { flex: 1; }
+
+  .stack-row { display: flex; align-items: center; gap: 20px; margin-top: 32px; flex-wrap: wrap; justify-content: center; }
+  .stack-pill { padding: 20px 32px; border-radius: 14px; font-size: 22px; font-weight: 700; text-align: center; line-height: 1.3; }
+  .stack-pill span { display: block; font-size: 15px; font-weight: 400; color: #8888aa; margin-top: 4px; }
+  .arrow { color: #444; font-size: 32px; }
+
+  .emoji-big { font-size: 80px; text-align: center; margin: 12px 0; }
+  .center { text-align: center; }
+
+  .highlight-text { background: linear-gradient(135deg, #00c9a7, #6c63ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .highlight-yellow { color: #ffcb6b; }
+  .highlight-teal { color: #00c9a7; }
+
+  .footnote { position: absolute; bottom: 20px; left: 50px; right: 50px; font-size: 14px; color: #444; text-align: center; }
+
+  /* Notes panel */
+  #notesPanel { width: 320px; background: #0a0a14; border-left: 1px solid #1e1e3a; padding: 20px; overflow-y: auto; display: none; flex-direction: column; gap: 10px; flex-shrink: 0; }
+  #notesPanel.visible { display: flex; }
+  #notesPanel h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #444; margin-bottom: 6px; }
+  #notesPanel p { font-size: 13px; color: #8888aa; line-height: 1.6; }
+  #notesPanel p + p { margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span class="title">Java. Backends. AI. You.</span>
+  <div class="controls">
+    <button id="btnNotes" onclick="toggleNotes()">Notes</button>
+    <button id="btnFull" onclick="toggleFull()">⛶ Full</button>
+    <button id="btnPrev" onclick="move(-1)" disabled>← Prev</button>
+    <span class="counter" id="counter">1 / 12</span>
+    <button id="btnNext" onclick="move(1)">Next →</button>
+  </div>
+</div>
+
+<div id="progress"><div id="progressBar" style="width:8.33%"></div></div>
+
+<div id="main">
+<div id="slideArea">
+
+<!-- SLIDE 1: Title -->
+<div class="slide active" id="slide-1">
+  <div class="slide-num">1 / 12</div>
+  <div class="label teal">Malla Reddy University · 2026</div>
+  <h1><span class="highlight-text">Java.</span><br>Backends.<br>AI. <span style="color:#ffcb6b">You.</span></h1>
+  <div class="sub">What they are, why they matter, and why you're closer than you think.</div>
+  <div style="margin-top:14px; font-size:20px; color:#00c9a7">@srinivasreddyramaram</div>
+  <div class="footnote">← → to navigate · N for notes · F for fullscreen</div>
+</div>
+
+<!-- SLIDE 2: Raise your hand -->
+<div class="slide" id="slide-2">
+  <div class="slide-num">2 / 12</div>
+  <div class="label yellow">Audience check</div>
+  <h2>Let's see where everyone's at.</h2>
+  <ul class="bullet-list" style="margin-top:24px">
+    <li><span class="icon">✋</span> You have written Java code before</li>
+    <li><span class="icon">✋</span> You have an app on your phone you use daily</li>
+    <li><span class="icon">✋</span> You have used ChatGPT / Gemini</li>
+    <li><span class="icon">✋</span> You have Googled "how to crack placement"</li>
+  </ul>
+  <div class="tagline" style="margin-top:24px">Good. Everything you need is already in that room.</div>
+</div>
+
+<!-- SLIDE 3: What is a backend -->
+<div class="slide" id="slide-3">
+  <div class="slide-num">3 / 12</div>
+  <div class="label teal">Backend 101</div>
+  <h2>You ordered biryani on Swiggy.<br>Who actually made it happen?</h2>
+  <div class="card-row" style="margin-top:22px">
+    <div class="card">
+      <div class="card-icon">📱</div>
+      <h3>The App (Frontend)</h3>
+      <p>What you tap. Looks pretty. Shows you the menu and the delivery map.</p>
+    </div>
+    <div class="card highlight">
+      <div class="card-icon">⚙️</div>
+      <h3>The Backend</h3>
+      <p>Checks your balance. Finds nearby restaurants. Assigns a delivery partner. Sends your OTP. <strong style="color:#00c9a7">Does all the work.</strong></p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🗄️</div>
+      <h3>The Database</h3>
+      <p>Remembers your address. Stores your order history. Keeps your coupon codes.</p>
+    </div>
+  </div>
+  <div class="tagline">Backend = the invisible engine that runs everything you love.</div>
+</div>
+
+<!-- SLIDE 4: Java is not just college -->
+<div class="slide" id="slide-4">
+  <div class="slide-num">4 / 12</div>
+  <div class="label purple">Java in the wild</div>
+  <h2>Java is not just your lab assignment.</h2>
+  <div class="two-col" style="margin-top:10px">
+    <div class="col">
+      <ul class="bullet-list">
+        <li><span class="icon">💳</span> UPI / NPCI — runs on Java</li>
+        <li><span class="icon">🚆</span> IRCTC booking engine — Java</li>
+        <li><span class="icon">📦</span> Amazon's backend — heavily Java</li>
+        <li><span class="icon">📱</span> Android apps — Java/Kotlin</li>
+        <li><span class="icon">🏦</span> Every Indian bank's core system — Java</li>
+      </ul>
+    </div>
+    <div class="col center" style="padding-top:10px">
+      <div class="big-stat">3B+</div>
+      <div class="big-stat-label">devices run Java</div>
+      <div class="sub" style="margin-top:16px;">Most-hired backend language in India. 20 years running.</div>
+    </div>
+  </div>
+  <div class="tagline">You didn't learn a toy language. You learned the language of production.</div>
+</div>
+
+<!-- SLIDE 5: What is AI (demystified) -->
+<div class="slide" id="slide-5">
+  <div class="slide-num">5 / 12</div>
+  <div class="label yellow">AI — no hype, just facts</div>
+  <h2>What actually is AI?</h2>
+  <div class="vs-row">
+    <div class="vs-box bad">
+      <h3>What movies told you</h3>
+      <ul>
+        <li>A robot that becomes sentient</li>
+        <li>Requires a PhD and a GPU cluster</li>
+        <li>Will take your job tomorrow</li>
+        <li>Understands everything magically</li>
+      </ul>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box good">
+      <h3>What it actually is</h3>
+      <ul>
+        <li>A model trained on text — very good at predicting the next word</li>
+        <li>Accessible via a simple API call</li>
+        <li>A tool — like a hammer. You decide what to build</li>
+        <li>Already available, free, right now</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tagline">AI is not magic. It's a function you can call from your code.</div>
+</div>
+
+<!-- SLIDE 6: What is an API + how AI API works -->
+<div class="slide" id="slide-6">
+  <div class="slide-num">6 / 12</div>
+  <div class="label blue">APIs — using one and building one</div>
+  <h2>An API is a menu.<br>You order. You don't cook.</h2>
+  <div class="card-row" style="margin-top:20px">
+    <div class="card">
+      <div class="card-icon">📍</div>
+      <h3>You already know this</h3>
+      <p>Swiggy doesn't build GPS. They call Google Maps API. One call. Full navigation.</p>
+    </div>
+    <div class="card highlight">
+      <div class="card-icon">🤖</div>
+      <h3>Today — we USE one</h3>
+      <p>We send Gemini a topic. Gemini sends back 5 interview questions. One HTTP call.</p>
+    </div>
+    <div class="card" style="border-color:#c792ea">
+      <div class="card-icon">🏗️</div>
+      <h3>Today — we BUILD one</h3>
+      <p>Students send us a topic. We send back questions. We are the API now.</p>
+    </div>
+  </div>
+  <div class="pill-row">
+    <div class="pill teal">Free tier: 1,500 requests/day</div>
+    <div class="pill yellow">No GPU needed</div>
+    <div class="pill ghost">Same pattern as any REST API</div>
+  </div>
+</div>
+
+<!-- SLIDE 7: The gap -->
+<div class="slide" id="slide-7">
+  <div class="slide-num">7 / 12</div>
+  <div class="label red">The gap</div>
+  <h2>Most students can write Java.<br>Few can ship something with it.</h2>
+  <div class="quote-box">
+    "I know arrays, loops, OOP... but I don't know how to build an actual app."
+    <div class="quote-attr">— every 3rd year student, ever</div>
+  </div>
+  <div class="two-col" style="margin-top:10px">
+    <div class="col">
+      <div class="label red" style="font-size:12px">The gap is NOT</div>
+      <ul class="bullet-list">
+        <li><span class="icon">❌</span> Not knowing a new language</li>
+        <li><span class="icon">❌</span> Not knowing Data Structures</li>
+        <li><span class="icon">❌</span> Not being smart enough</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="label teal" style="font-size:12px">It's actually</div>
+      <ul class="bullet-list">
+        <li><span class="icon">✅</span> Never building anything end-to-end</li>
+        <li><span class="icon">✅</span> Not knowing how pieces connect</li>
+        <li><span class="icon">✅</span> Fixable. Today. In this room.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: Spring Boot -->
+<div class="slide" id="slide-8">
+  <div class="slide-num">8 / 12</div>
+  <div class="label purple">Spring Boot</div>
+  <h2>Java + <span class="highlight-text">Superpowers.</span></h2>
+  <div class="tagline" style="margin-bottom:4px">"Handles the boring stuff so you focus on the real stuff."</div>
+  <div class="vs-row" style="margin-top:16px">
+    <div class="vs-box bad">
+      <h3>Without Spring Boot</h3>
+      <ul>
+        <li>Setup web server manually</li>
+        <li>Write JDBC boilerplate</li>
+        <li>Configure Tomcat XML</li>
+        <li>Manage object lifecycles</li>
+        <li>Handle HTTP parsing</li>
+      </ul>
+      <p style="color:#f48771; margin-top:12px; font-size:17px; font-style:italic">200 lines before Hello World.</p>
+    </div>
+    <div class="vs-box good">
+      <h3>With Spring Boot</h3>
+      <ul>
+        <li>Spring handles all that ↑</li>
+        <li>You only write: <strong style="color:#fff">business logic</strong></li>
+        <li>REST API in 10 lines. Seriously.</li>
+      </ul>
+      <p style="color:#00c9a7; margin-top:12px; font-size:17px; font-style:italic">Netflix, LinkedIn, Flipkart run on this.</p>
+    </div>
+  </div>
+  <div class="tagline" style="margin-top:16px">It's not a shortcut — it's how real backend engineers work.</div>
+</div>
+
+<!-- SLIDE 9: The combination -->
+<div class="slide" id="slide-9">
+  <div class="slide-num">9 / 12</div>
+  <div class="label yellow">The combo</div>
+  <h2>Java + Spring Boot + AI API<br>= <span class="highlight-text">production-grade AI app.</span></h2>
+  <div class="stack-row">
+    <div class="stack-pill" style="background:#2a1a3e;border:1px solid #c792ea;color:#c792ea">☕ Java<span>Logic + OOP</span></div>
+    <div class="arrow">+</div>
+    <div class="stack-pill" style="background:#003d35;border:1px solid #00c9a7;color:#00c9a7">🍃 Spring Boot<span>Web + Database</span></div>
+    <div class="arrow">+</div>
+    <div class="stack-pill" style="background:#3d2e00;border:1px solid #ffcb6b;color:#ffcb6b">🤖 Gemini API<span>AI responses</span></div>
+    <div class="arrow">=</div>
+    <div class="stack-pill" style="background:#0f1e3d;border:1px solid #82aaff;color:#82aaff">🚀 AI App<span>ships to users</span></div>
+  </div>
+  <div class="sub" style="text-align:center; margin-top:28px">You already know Java. The other two — you'll know by the end of today.</div>
+  <div class="tagline" style="text-align:center">You're not starting from zero. You're one afternoon away.</div>
+</div>
+
+<!-- SLIDE 10: Placement edge (merged 11+12) -->
+<div class="slide" id="slide-10">
+  <div class="slide-num">10 / 12</div>
+  <div class="label teal">Your placement edge</div>
+  <h2>Placements are not just about DSA.<br><span style="color:#00c9a7">"Show me something you built."</span></h2>
+  <div class="two-col" style="margin-top:16px">
+    <div class="col">
+      <ul class="bullet-list">
+        <li><span class="icon">📄</span> Resume: <em style="color:#00c9a7">stands out instantly</em></li>
+        <li><span class="icon">🔗</span> GitHub: interviewer can see it running</li>
+        <li><span class="icon">💬</span> Interview: you have a real story to tell</li>
+        <li><span class="icon">💡</span> Your head: you understand how production works</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="quote-box" style="margin:0; font-size:22px">
+        "Tell me about a project you built."
+        <div class="quote-attr">— every interviewer, always</div>
+      </div>
+      <div class="tagline" style="margin-top:16px; font-size:18px">Most competition brings a CRUD todo app.<br>You'll bring an AI app.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: Today's plan -->
+<div class="slide" id="slide-11">
+  <div class="slide-num">11 / 12</div>
+  <div class="label yellow">Today's plan</div>
+  <h2>Here's what we're building.</h2>
+  <div class="timeline" style="margin-top:18px">
+    <div class="timeline-item">
+      <div class="timeline-dot teal">🎯</div>
+      <div class="timeline-content">
+        <h4>Placement Prep Assistant</h4>
+        <p>Type a topic → get AI-generated interview questions → save your history</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot purple">🏗️</div>
+      <div class="timeline-content">
+        <h4>We build it live — one layer at a time</h4>
+        <p>API call first → clean it up → add a model → persist to DB → retrieve history</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot yellow">📦</div>
+      <div class="timeline-content">
+        <h4>By the end you have a working app</h4>
+        <p>Clone it, run it, put it on your resume tonight</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot blue">🎤</div>
+      <div class="timeline-content">
+        <h4>You'll be able to explain every line</h4>
+        <p>Because you watched it get added, one reason at a time</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: Let's go -->
+<div class="slide" id="slide-12">
+  <div class="slide-num">12 / 12</div>
+  <div class="center" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="emoji-big">🚀</div>
+    <h2 style="text-align:center">Let's build something<br><span class="highlight-text">you can be proud of.</span></h2>
+    <div class="sub" style="text-align:center; margin-top:12px;">
+      Open your laptops. We're starting from a blank file.<br>
+      <span class="highlight-yellow">Every senior engineer you admire started exactly here.</span>
+    </div>
+    <div class="pill-row" style="justify-content:center; margin-top:24px">
+      <div class="pill teal">Spring Boot 4</div>
+      <div class="pill yellow">Java 25</div>
+      <div class="pill purple">Gemini 2.5 Flash</div>
+      <div class="pill ghost">Free. Open source. Yours.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- slideArea -->
+
+<!-- Notes Panel -->
+<div id="notesPanel">
+  <h3>Speaker Notes</h3>
+  <div id="notesContent"></div>
+</div>
+</div><!-- main -->
+
+<script>
+const total = 12;
+let cur = 1;
+let notesOpen = false;
+
+const notes = {
+  1: `<p>Welcome them. No slides full of text — this is a conversation, not a lecture.</p><p>Ask: how many of you are in 3rd year? How many have your placement season coming up?</p><p>Set the tone: by the end of today you'll have a working AI app running on your laptop.</p>`,
+  2: `<p>Do this as an actual show-of-hands. Wait for them to respond. Make it interactive from slide 1.</p><p>On the last point — "Googled how to crack placement" — pause and smile. Every hand will go up. That's the tension you'll resolve today.</p>`,
+  3: `<p>Use Swiggy because everyone has ordered on it. Zomato works too.</p><p>Point out: the app on your phone is maybe 20% of the engineering. The backend is 80% — and that's where most of the jobs are.</p><p>Ask: "Who here has seen a delivery app crash? That's a backend problem."</p>`,
+  4: `<p>The 3 billion stat is real. IRCTC / NPCI / Indian banking — relatable for this room. They use UPI every day.</p><p>Punchline: "You didn't learn a toy language for college. You learned the language that runs the country's money."</p>`,
+  5: `<p>The movie vs reality split always lands. Students have a sci-fi picture of AI in their heads.</p><p>Pause on "A tool — like a hammer." Let it sink. A hammer doesn't replace the person who uses it.</p>`,
+  6: `<p>The restaurant menu analogy is universal — everyone gets it instantly.</p><p>The "we use one AND we build one" reframing is important. Students usually think of themselves as API consumers. Today they become API builders too.</p><p>Ask: "Who has used Google Maps inside another app? That was an API call."</p>`,
+  7: `<p>This slide usually gets a nervous laugh because everyone recognises the quote.</p><p>Be clear: the gap isn't intelligence. It's exposure. "Fixable. Today. In this room." — say this slowly.</p>`,
+  8: `<p>The 200-lines-before-Hello-World joke lands because it's true and painful. Let them laugh.</p><p>Netflix/Flipkart credibility — brands they recognise and want to work at. Spring Boot is not a shortcut, it's the standard.</p>`,
+  9: `<p>The formula is the "aha" moment. Three pieces — they already have piece 1.</p><p>"You're one afternoon away" — make this land. Not one year. Not one semester. One afternoon.</p>`,
+  10: `<p>The interviewer quote is real — it comes up in almost every interview after the resume screen.</p><p>The contrast: CRUD todo app vs AI app. Both might take the same time to build but one is a story, one is not.</p><p>"Tonight, after we're done, your GitHub will have something a recruiter will actually look at."</p>`,
+  11: `<p>Preview what's coming in the demo. Don't over-explain — just set expectations.</p><p>"One layer at a time" is important. Reassure them: each step will make sense before you move to the next.</p>`,
+  12: `<p>Energy slide. Pause. Let the room settle.</p><p>"Every senior engineer you admire started exactly here" — mean it. No one was born knowing Spring Boot.</p><p>Ask them to open their laptops. Transition to the demo. The slides are done — now it's live.</p>`
+};
+
+function showSlide(n) {
+  document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+  document.getElementById('slide-' + n).classList.add('active');
+  document.getElementById('counter').textContent = n + ' / ' + total;
+  document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+  document.getElementById('btnPrev').disabled = n === 1;
+  document.getElementById('btnNext').disabled = n === total;
+  document.getElementById('notesContent').innerHTML = notes[n] || '<p>No notes for this slide.</p>';
+}
+
+function move(dir) {
+  const next = cur + dir;
+  if (next < 1 || next > total) return;
+  cur = next;
+  showSlide(cur);
+}
+
+function toggleNotes() {
+  notesOpen = !notesOpen;
+  document.getElementById('notesPanel').classList.toggle('visible', notesOpen);
+  document.getElementById('btnNotes').style.background = notesOpen ? '#00c9a7' : '';
+  document.getElementById('btnNotes').style.color = notesOpen ? '#000' : '';
+}
+
+function toggleFull() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); move(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+  if (e.key === 'n' || e.key === 'N') toggleNotes();
+  if (e.key === 'f' || e.key === 'F') toggleFull();
+});
+
+showSlide(1);
+</script>
+</body>
+</html>

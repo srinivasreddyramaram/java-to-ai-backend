@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>From Java to AI — Live Build</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #080812; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  #topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px; background: #0f0f1e; border-bottom: 1px solid #1e1e3a; flex-shrink: 0; }
+  #topbar .title { font-size: 13px; color: #555; }
+  #topbar .controls { display: flex; gap: 10px; align-items: center; }
+  #topbar button { background: #1a1a2e; border: 1px solid #2a2a4a; color: #aaa; padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  #topbar button:hover { background: #6c63ff; border-color: #6c63ff; color: #fff; }
+  #topbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+  #topbar .counter { font-size: 12px; color: #555; min-width: 60px; text-align: center; }
+
+  #progress { height: 3px; background: #1e1e3a; flex-shrink: 0; }
+  #progressBar { height: 100%; background: linear-gradient(90deg, #ff6b9d, #6c63ff); transition: width 0.4s ease; }
+
+  #main { display: flex; flex: 1; overflow: hidden; }
+  #slideArea { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; overflow: hidden; }
+
+  .slide { display: none; background: #1a1a2e; border-radius: 16px; padding: 40px 50px; width: 100%; max-width: 860px; height: 100%; max-height: 560px; position: relative; border: 1px solid #2a2a4a; box-shadow: 0 8px 40px rgba(0,0,0,0.6); flex-direction: column; justify-content: center; overflow: hidden; }
+  .slide.active { display: flex; animation: slideIn 0.32s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+
+  .slide-num { position: absolute; top: 16px; right: 20px; font-size: 11px; color: #333; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #ff6b9d; margin-bottom: 10px; font-weight: 600; }
+  .iter-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #ffcb6b; margin-bottom: 10px; font-weight: 600; }
+  .concept-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #82aaff; margin-bottom: 10px; font-weight: 600; }
+  .slide h2 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .tagline { font-size: 13px; color: #ff6b9d; margin-bottom: 16px; font-style: italic; }
+
+  /* Code */
+  .code-wrap { background: #0d0d1a; border-radius: 10px; border: 1px solid #2a2a4a; overflow: hidden; margin: 10px 0; flex: 1; display: flex; flex-direction: column; }
+  .code-header { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #12121f; border-bottom: 1px solid #2a2a4a; flex-shrink: 0; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .code-lang { margin-left: auto; font-size: 11px; color: #444; font-family: monospace; }
+  .code { padding: 16px 24px; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.9; color: #d4d4d4; overflow-x: auto; white-space: pre; flex: 1; }
+
+  /* Tokens */
+  .kw { color: #569cd6; } .cl { color: #4ec9b0; } .fn { color: #dcdcaa; }
+  .ann { color: #c792ea; } .str { color: #ce9178; } .cm { color: #6a9955; font-style: italic; }
+  .num { color: #b5cea8; } .prop { color: #9cdcfe; }
+  .hl-good { color: #6bffb8; } .hl-bad { color: #f48771; }
+
+  .info-bar { font-size: 12px; color: #a0a0c0; margin-top: 10px; background: #0d0d1a; border-radius: 6px; padding: 8px 14px; flex-shrink: 0; }
+  .warn-bar { font-size: 12px; color: #ffcb6b; margin-top: 10px; background: #1a1400; border-radius: 6px; padding: 8px 14px; flex-shrink: 0; }
+
+  /* Two-column */
+  .two-col { display: flex; gap: 14px; flex: 1; overflow: hidden; }
+  .col-half { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .col-label { font-size: 11px; color: #555; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+
+  /* Cards */
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; flex: 1; }
+  .card { background: #12121f; border: 1px solid #2a2a4a; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+  .card.pick { border-color: #ff6b9d; background: #1f1020; }
+  .card-icon { font-size: 22px; }
+  .card h3 { font-size: 14px; font-weight: 700; color: #fff; }
+  .card p { font-size: 12px; color: #8888aa; line-height: 1.4; }
+  .card .badge { font-size: 10px; color: #ff6b9d; font-weight: 600; margin-top: 4px; }
+
+  /* Roadmap */
+  .roadmap { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; flex: 1; }
+  .road-item { display: flex; gap: 12px; align-items: flex-start; padding: 8px 12px; border-radius: 8px; background: #12121f; border: 1px solid #2a2a4a; }
+  .road-num { font-size: 11px; font-weight: 700; color: #ffcb6b; min-width: 50px; flex-shrink: 0; padding-top: 1px; }
+  .road-text { font-size: 13px; color: #cccce0; }
+  .road-text strong { color: #fff; }
+
+  /* Concept blocks (v1 content) */
+  .concept-row { display: flex; gap: 12px; flex: 1; overflow: hidden; }
+  .concept-box { flex: 1; background: #0d0d1a; border-radius: 10px; border: 1px solid #2a2a4a; padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; }
+  .concept-box.bad { border-color: #f4877155; background: #1f0f0f; }
+  .concept-box.good { border-color: #6bffb855; background: #091a12; }
+  .concept-box h4 { font-size: 12px; font-weight: 700; }
+  .concept-box.bad h4 { color: #f48771; }
+  .concept-box.good h4 { color: #6bffb8; }
+  .concept-box p { font-size: 12px; color: #8888aa; line-height: 1.5; }
+
+  /* OOP pillars */
+  .pillar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; flex: 1; }
+  .pillar { background: #12121f; border: 1px solid #2a2a4a; border-radius: 10px; padding: 14px; }
+  .pillar-icon { font-size: 20px; margin-bottom: 4px; }
+  .pillar h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .pillar p { font-size: 11px; color: #8888aa; line-height: 1.4; }
+  .pillar code { font-family: monospace; color: #c792ea; font-size: 11px; }
+
+  /* Layers */
+  .layer-flow { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; flex: 1; }
+  .layer { display: flex; align-items: center; gap: 12px; background: #12121f; border: 1px solid #2a2a4a; border-radius: 8px; padding: 10px 16px; }
+  .layer-icon { font-size: 18px; min-width: 24px; }
+  .layer-name { font-size: 13px; font-weight: 700; color: #fff; min-width: 120px; }
+  .layer-desc { font-size: 12px; color: #8888aa; }
+  .layer-arrow { color: #333; text-align: center; font-size: 16px; margin-left: 24px; }
+
+  /* Before/after */
+  .ba-row { display: flex; gap: 14px; flex: 1; align-items: stretch; margin-top: 10px; }
+  .ba-box { flex: 1; border-radius: 10px; padding: 16px 20px; }
+  .ba-box.before { background: #1a0f0f; border: 1px solid #f4877144; }
+  .ba-box.after { background: #0a1a10; border: 1px solid #6bffb844; }
+  .ba-box h4 { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+  .ba-box.before h4 { color: #f48771; }
+  .ba-box.after h4 { color: #6bffb8; }
+  .ba-box ul { list-style: none; padding: 0; }
+  .ba-box ul li { font-size: 12px; color: #aaaacc; padding: 4px 0; border-bottom: 1px solid #ffffff08; display: flex; gap: 8px; line-height: 1.4; }
+  .ba-box ul li:last-child { border-bottom: none; }
+
+  /* Tag pills */
+  .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .tag { font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+  .tag.pink { background: #2a1020; color: #ff6b9d; border: 1px solid #ff6b9d55; }
+  .tag.blue { background: #0f1e3d; color: #82aaff; border: 1px solid #82aaff55; }
+  .tag.yellow { background: #2a1e00; color: #ffcb6b; border: 1px solid #ffcb6b55; }
+  .tag.green { background: #091a12; color: #6bffb8; border: 1px solid #6bffb855; }
+  .tag.purple { background: #1e1040; color: #c792ea; border: 1px solid #c792ea55; }
+
+  /* Dopamine / closing */
+  .big-moment { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 12px; text-align: center; }
+  .emoji-xl { font-size: 64px; }
+  .moment-action { background: #12121f; border: 1px solid #6bffb855; border-radius: 10px; padding: 12px 28px; font-family: monospace; font-size: 14px; color: #6bffb8; }
+  .moment-note { font-size: 12px; color: #555; max-width: 460px; line-height: 1.5; }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; margin-top: 12px; flex: 1; }
+  .checklist li { font-size: 14px; color: #cccce0; padding: 9px 0; border-bottom: 1px solid #1e1e3a; display: flex; align-items: center; gap: 10px; }
+  .checklist li:last-child { border-bottom: none; }
+  .check { color: #6bffb8; font-size: 16px; }
+
+  /* Notes panel */
+  #notesPanel { width: 300px; background: #0a0a14; border-left: 1px solid #1e1e3a; padding: 20px; overflow-y: auto; display: none; flex-direction: column; gap: 10px; flex-shrink: 0; }
+  #notesPanel.visible { display: flex; }
+  #notesPanel h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #444; margin-bottom: 6px; }
+  #notesPanel p { font-size: 13px; color: #8888aa; line-height: 1.6; }
+  #notesPanel p + p { margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span class="title">From Java to AI — Live Build</span>
+  <div class="controls">
+    <button id="btnNotes" onclick="toggleNotes()">Notes</button>
+    <button id="btnFull" onclick="toggleFull()">⛶ Full</button>
+    <button id="btnPrev" onclick="move(-1)" disabled>← Prev</button>
+    <span class="counter" id="counter">1 / 20</span>
+    <button id="btnNext" onclick="move(1)">Next →</button>
+  </div>
+</div>
+
+<div id="progress"><div id="progressBar" style="width:5%"></div></div>
+
+<div id="main">
+<div id="slideArea">
+
+<!-- SLIDE 1: Title -->
+<div class="slide active" id="slide-1">
+  <div class="slide-num">1 / 20</div>
+  <div class="section-label">Live Workshop · Malla Reddy University</div>
+  <h2>Building an AI App —<br><span style="color:#ff6b9d">Live. From Scratch.</span></h2>
+  <p style="font-size:14px;color:#8888aa;margin:10px 0 16px">No magic. No copy-paste. One iteration at a time.</p>
+  <div class="tag-row">
+    <span class="tag pink">Spring Boot</span>
+    <span class="tag blue">Google Gemini</span>
+    <span class="tag yellow">Working at every step</span>
+    <span class="tag green">Java 25</span>
+  </div>
+  <p style="font-size:12px;color:#555;margin-top:16px">@srinivasreddyramaram</p>
+</div>
+
+<!-- SLIDE 2: App Ideas -->
+<div class="slide" id="slide-2">
+  <div class="slide-num">2 / 20</div>
+  <div class="section-label">Let's brainstorm</div>
+  <h2>What can we build with Java + AI?</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">📅</div>
+      <h3>Attendance Calculator</h3>
+      <p>"Can I bunk tomorrow without dropping below 75%?" Every student's most important calculation.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📄</div>
+      <h3>Resume Roaster</h3>
+      <p>"Your resume has 3 spelling mistakes and no projects." Honest feedback. Unlike your relatives.</p>
+    </div>
+    <div class="card pick">
+      <div class="card-icon">🎯</div>
+      <h3>Placement Prep Assistant</h3>
+      <p>Generate 5 interview questions on any topic, instantly. Because interviews are in 6 months.</p>
+      <div class="badge">← building this today</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">☕</div>
+      <h3>Chai Recommender</h3>
+      <p>"Based on your deadline, you need cutting chai. Now." AI solving real problems.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: The App -->
+<div class="slide" id="slide-3">
+  <div class="slide-num">3 / 20</div>
+  <div class="section-label">Today's app</div>
+  <h2>Placement Prep Assistant</h2>
+  <p class="tagline">6 months to placement. 500+ topics. Let's automate the panic.</p>
+  <div class="code-wrap">
+    <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span style="font-size:11px;color:#555;margin-left:8px">Bruno / Postman</span></div>
+    <div class="code"><span class="kw">POST</span> http://localhost:8080/prep?topic=<span class="str">Arrays</span>
+
+<span class="cm">// AI responds with:</span>
+<span class="hl-good">1. What is the time complexity of binary search?
+2. How do you reverse an array in-place?
+3. Explain the two-pointer technique...
+4. Find duplicates in O(n).
+5. Merge two sorted arrays.</span></div>
+  </div>
+  <div class="info-bar">You send a topic. You get 5 interview questions. Simple enough to build today, useful enough to actually use.</div>
+</div>
+
+<!-- SLIDE 4: Tools -->
+<div class="slide" id="slide-4">
+  <div class="slide-num">4 / 20</div>
+  <div class="section-label">The tools</div>
+  <h2>Two things. That's all.</h2>
+  <div class="concept-row" style="margin-top:16px">
+    <div class="concept-box good">
+      <h4>🍃 Spring Boot</h4>
+      <p>Turns your Java class into a running web server. You write the logic. Spring handles everything else.</p>
+      <p style="margin-top:8px;color:#555;font-size:11px">Used by: Swiggy, Razorpay, PhonePe</p>
+    </div>
+    <div class="concept-box" style="border-color:#c792ea55;background:#1a1030">
+      <h4 style="color:#c792ea">✨ Google Gemini</h4>
+      <p>Free AI API. No credit card. 1,500 requests/day on Flash. More than enough to build and demo today.</p>
+      <p style="margin-top:8px;color:#555;font-size:11px">Get your key: aistudio.google.com</p>
+    </div>
+  </div>
+  <div class="info-bar" style="margin-top:12px">Both free. Both running on your laptop. No cloud account needed for today.</div>
+</div>
+
+<!-- SLIDE 5: The Plan -->
+<div class="slide" id="slide-5">
+  <div class="slide-num">5 / 20</div>
+  <div class="section-label">The plan</div>
+  <h2>6 Iterations. Working at every step.</h2>
+  <div class="roadmap">
+    <div class="road-item"><span class="road-num">Iter 1</span><span class="road-text"><strong>Just talk to Gemini</strong> — Does the AI actually work? Find out in 20 lines.</span></div>
+    <div class="road-item"><span class="road-num">Iter 2</span><span class="road-text"><strong>Clean the response</strong> — Raw JSON is ugly. Parse it like adults.</span></div>
+    <div class="road-item"><span class="road-num">Iter 3</span><span class="road-text"><strong>Don't forget what you asked</strong> — Introduce the Model. Memory enters the chat.</span></div>
+    <div class="road-item"><span class="road-num">Iter 4</span><span class="road-text"><strong>Save it to a database</strong> — @Entity + JpaRepository. Zero SQL written.</span></div>
+    <div class="road-item"><span class="road-num">Iter 5</span><span class="road-text"><strong>Retrieve history</strong> — GET /history. One line. Full recall.</span></div>
+    <div class="road-item"><span class="road-num">Iter 6</span><span class="road-text"><strong>Clean it up</strong> — Extract Service. Controller goes on a diet.</span></div>
+  </div>
+</div>
+
+<!-- SLIDE 6: Iteration 1 -->
+<div class="slide" id="slide-6">
+  <div class="slide-num">6 / 20</div>
+  <div class="iter-label">Iteration 1 of 6</div>
+  <h2>Just talk to Gemini</h2>
+  <p class="tagline">No Spring. No web server. Just: does the AI actually respond?</p>
+  <div class="code-wrap">
+    <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">PrepappApplication.java</span></div>
+    <div class="code"><span class="kw">class</span> <span class="cl">GeminiAPI</span> {
+  <span class="kw">public void</span> <span class="fn">getQuestions</span>() {
+    <span class="cl">String</span> request = <span class="str">"{ \"contents\": [{ \"parts\": [{ \"text\": \"5 interview questions on Arrays\" }] }] }"</span>;
+    <span class="cl">Object</span> response = <span class="kw">new</span> <span class="cl">RestTemplate</span>().<span class="fn">postForObject</span>(
+        <span class="str">"https://generativelanguage.googleapis.com/...?key=YOUR_KEY"</span>, request, <span class="cl">Object</span>.<span class="kw">class</span>);
+    <span class="cl">System</span>.out.<span class="fn">println</span>(response.<span class="fn">toString</span>());
+  }
+}
+
+<span class="cm">// main() just calls it directly — no HTTP, no Spring yet</span>
+<span class="kw">public static void</span> <span class="fn">main</span>(<span class="cl">String</span>[] args) {
+  <span class="kw">new</span> <span class="cl">GeminiAPI</span>().<span class="fn">getQuestions</span>();
+}</div>
+  </div>
+  <div class="info-bar">No @RestController. No @PostMapping. Run it as a Java app — see if Gemini responds. That's the only goal.</div>
+</div>
+
+<!-- SLIDE 7: What's wrong with iteration 1 -->
+<div class="slide" id="slide-7">
+  <div class="slide-num">7 / 20</div>
+  <div class="concept-label">It works. Now look closer.</div>
+  <h2>What's wrong with this picture?</h2>
+  <div class="two-col" style="margin-top:12px;flex:none">
+    <div class="concept-box bad">
+      <h4>Problems we can see</h4>
+      <p>🔑 API key hardcoded — one push to GitHub and it's gone</p>
+      <p style="margin-top:6px">📦 Topic hardcoded — "Arrays" forever, no input</p>
+      <p style="margin-top:6px">🖨️ <code style="font-family:monospace;font-size:11px">void</code> + <code style="font-family:monospace;font-size:11px">System.out.println</code> — no one can call this from a browser</p>
+      <p style="margin-top:6px">🗺️ <code style="font-family:monospace;font-size:11px">Object.class</code> response — ugly LinkedHashMap, not readable</p>
+    </div>
+    <div class="concept-box good">
+      <h4>What we proved</h4>
+      <p>✅ Gemini API is reachable from Java</p>
+      <p style="margin-top:6px">✅ RestTemplate can make the HTTP call</p>
+      <p style="margin-top:6px">✅ We get real questions back</p>
+      <p style="margin-top:6px">🎯 Each problem above = one iteration to fix</p>
+    </div>
+  </div>
+  <div class="warn-bar" style="margin-top:10px">💡 This is exactly how real engineers work — get it working first, then fix it. The problems are the roadmap.</div>
+</div>
+
+<!-- SLIDE 8: Dopamine -->
+<div class="slide" id="slide-8">
+  <div class="slide-num">8 / 20</div>
+  <div class="big-moment">
+    <div class="emoji-xl">🎉</div>
+    <h2>It works.</h2>
+    <p style="font-size:15px;color:#8888aa">Your Java code just talked to Google's AI.<br>And got a real answer back.</p>
+    <div class="moment-action">POST /prep?topic=Arrays → 5 questions ✅</div>
+    <p class="moment-note">Screenshot this. Put it on LinkedIn.<br>"Built an AI app. In college. Don't @ me." 😎</p>
+  </div>
+</div>
+
+<!-- SLIDE 9: Iteration 2 -->
+<div class="slide" id="slide-9">
+  <div class="slide-num">9 / 20</div>
+  <div class="iter-label">Iteration 2 of 6</div>
+  <h2>Clean the response</h2>
+  <p class="tagline">Raw JSON is what the API gives. Questions are what humans want.</p>
+  <div class="two-col">
+    <div class="col-half">
+      <div class="col-label"><span style="color:#f48771">❌</span> What Gemini returns — JSON</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code" style="font-size:12px"><span class="hl-bad">{ "candidates": [{
+  "content": {
+    "parts": [{
+      "text": "1. What is..."
+    }]
+  }
+}] }</span></div>
+      </div>
+    </div>
+    <div class="col-half">
+      <div class="col-label"><span style="color:#6bffb8">✅</span> What we return — String</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code" style="font-size:12px"><span class="hl-good">1. What is binary search?
+2. Reverse an array in-place.
+3. Explain two-pointer.
+4. Find duplicates in O(n).
+5. Merge two sorted arrays.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-bar">Add <code style="font-family:monospace;color:#c792ea">extractQuestions(response)</code> — navigate the JSON, pull the text. Still in the controller. Still working.</div>
+</div>
+
+<!-- SLIDE 10: Iteration 3 -->
+<div class="slide" id="slide-10">
+  <div class="slide-num">10 / 20</div>
+  <div class="iter-label">Iteration 3 of 6</div>
+  <h2>Wait — what did we ask yesterday?</h2>
+  <p class="tagline">Every restart wipes everything. Like that group member with selective memory.</p>
+  <div class="two-col" style="margin-top:8px">
+    <div class="col-half">
+      <div class="concept-box bad" style="flex:1">
+        <h4>😬 The problem</h4>
+        <p>App restarts → questions gone forever.<br>Hostel wifi cuts → questions gone.<br>50 API calls → no record of what we asked.</p>
+      </div>
+    </div>
+    <div class="col-half">
+      <div class="concept-box good" style="flex:1">
+        <h4>✅ Introduce PrepSession</h4>
+        <p>A plain Java class. Fields: <code style="font-family:monospace;color:#c792ea">topic</code>, <code style="font-family:monospace;color:#c792ea">questions</code>, <code style="font-family:monospace;color:#c792ea">createdAt</code>.</p>
+        <p style="margin-top:6px">No Spring yet. Just a class. You know this already.</p>
+      </div>
+    </div>
+  </div>
+  <div class="warn-bar">💡 Not saving to a database yet — just defining what the data looks like. Next iteration does the saving.</div>
+</div>
+
+<!-- SLIDE 11: OOP Pillars -->
+<div class="slide" id="slide-11">
+  <div class="slide-num">11 / 20</div>
+  <div class="concept-label">OOP → Spring · All 4 Pillars in Our Code</div>
+  <h2>You already knew this. Spring just uses it.</h2>
+  <div class="pillar-grid">
+    <div class="pillar" style="border-color:#ff6b9d55">
+      <div class="pillar-icon">🔒</div>
+      <h4>Encapsulation</h4>
+      <p><code>PrepSession.java</code> — <code>private</code> fields + getters/setters. Spring & JPA call your getters to read/write the DB. Not optional.</p>
+    </div>
+    <div class="pillar" style="border-color:#82aaff55">
+      <div class="pillar-icon">🧬</div>
+      <h4>Inheritance</h4>
+      <p><code>PrepSessionRepository extends JpaRepository</code> — inherits <code>save()</code>, <code>findAll()</code>, <code>delete()</code> for free. Zero implementation needed.</p>
+    </div>
+    <div class="pillar" style="border-color:#ffcb6b55">
+      <div class="pillar-icon">🎭</div>
+      <h4>Abstraction</h4>
+      <p><code>JpaRepository</code> is an interface — you call <code>save()</code> without writing a single line of SQL. The how is hidden. You only need the what.</p>
+    </div>
+    <div class="pillar" style="border-color:#6bffb855">
+      <div class="pillar-icon">🔀</div>
+      <h4>Polymorphism</h4>
+      <p><code>PrepController</code> uses <code>PrepService</code> by type — Spring decides the concrete object at runtime. You code to the interface, not the implementation.</p>
+    </div>
+  </div>
+  <div class="info-bar">OOP isn't just theory. Every pillar shows up in the 4 files you're about to write.</div>
+</div>
+
+<!-- SLIDE 12: Iteration 4 -->
+<div class="slide" id="slide-12">
+  <div class="slide-num">12 / 20</div>
+  <div class="iter-label">Iteration 4 of 6</div>
+  <h2>Save it. Zero SQL written.</h2>
+  <p class="tagline">One annotation. One interface. Full database support.</p>
+  <div class="two-col">
+    <div class="col-half">
+      <div class="col-label">Add to PrepSession.java</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code"><span class="ann">@Entity</span> <span class="cm">// ← this one line</span>
+<span class="kw">public class</span> <span class="cl">PrepSession</span> {
+  <span class="ann">@Id</span>
+  <span class="ann">@GeneratedValue</span>
+  <span class="kw">private</span> <span class="cl">Long</span> id;
+  <span class="kw">private</span> <span class="cl">String</span> topic;
+  <span class="kw">private</span> <span class="cl">String</span> questions;
+  <span class="cm">// getters, setters</span>
+}</div>
+      </div>
+    </div>
+    <div class="col-half">
+      <div class="col-label">New file: PrepSessionRepository.java</div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code"><span class="kw">public interface</span> <span class="cl">PrepSessionRepository</span>
+    <span class="kw">extends</span> <span class="cl">JpaRepository</span>&lt;<span class="cl">PrepSession</span>, <span class="cl">Long</span>&gt; {
+
+} <span class="cm">// That's it. Seriously.</span>
+  <span class="cm">// save() is already there ✅</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-bar">Spring sees <code style="font-family:monospace;color:#c792ea">@Entity</code> → creates the table. Spring sees the interface → generates all SQL. You wrote zero SQL.</div>
+</div>
+
+<!-- SLIDE 13: Iteration 5 -->
+<div class="slide" id="slide-13">
+  <div class="slide-num">13 / 20</div>
+  <div class="iter-label">Iteration 5 of 6</div>
+  <h2>Retrieve history</h2>
+  <p class="tagline">Now you can tell your mom: "I prepared 47 topics today."</p>
+  <div class="code-wrap">
+    <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">PrepController.java — add this method</span></div>
+    <div class="code"><span class="ann">@GetMapping</span>(<span class="str">"/prep/history"</span>)
+<span class="kw">public</span> <span class="cl">List</span>&lt;<span class="cl">PrepSession</span>&gt; <span class="fn">getHistory</span>() {
+    <span class="kw">return</span> repository.<span class="fn">findAll</span>();
+}
+<span class="cm">// That's it. One line body.</span>
+<span class="cm">// Returns every session ever saved. ✅</span></div>
+  </div>
+  <div class="two-col" style="flex:none;margin-top:10px">
+    <div class="concept-box good"><h4>POST /prep?topic=OOPs</h4><p>Saves + returns the session</p></div>
+    <div class="concept-box good"><h4>GET /prep/history</h4><p>Returns all sessions. Full history.</p></div>
+  </div>
+  <div class="info-bar">Full loop: ask → AI answers → saved → retrievable. The app is feature-complete.</div>
+</div>
+
+<!-- SLIDE 14: Iteration 6 -->
+<div class="slide" id="slide-14">
+  <div class="slide-num">14 / 20</div>
+  <div class="iter-label">Iteration 6 of 6</div>
+  <h2>The controller is doing too much.</h2>
+  <p class="tagline">Like that one group member who does everyone's work and burns out.</p>
+  <div class="two-col">
+    <div class="col-half">
+      <div class="col-label"><span style="color:#f48771">❌</span> PrepController right now</div>
+      <div class="concept-box bad" style="flex:1">
+        <p>Builds the prompt · Calls the API · Parses the JSON · Creates the object · Saves to database · Returns response · Validates input · Handles errors</p>
+        <p style="margin-top:8px;color:#f48771;font-size:11px">80+ lines in one class 😬</p>
+      </div>
+    </div>
+    <div class="col-half">
+      <div class="col-label"><span style="color:#6bffb8">✅</span> After extracting PrepService</div>
+      <div class="code-wrap" style="flex:1">
+        <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="code" style="font-size:12px"><span class="cm">// Controller does ONE thing:</span>
+prepService.<span class="fn">generateQuestions</span>(topic);
+
+<span class="cm">// Service does the rest.</span>
+<span class="cm">// Spring wires them together.</span>
+<span class="cm">// That wiring = Dependency Injection ✅</span>
+
+<span class="hl-good">Clean. Testable. Hireable.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-bar">This is the moment DI makes sense — not as theory, but as the solution to a problem you just felt.</div>
+</div>
+
+<!-- SLIDE 15: Spring Magic (DI + Annotations + Layers) -->
+<div class="slide" id="slide-15">
+  <div class="slide-num">15 / 20</div>
+  <div class="concept-label">The Spring Magic — DI · Annotations · Layers</div>
+  <h2>You annotate. Spring creates. You receive.</h2>
+  <div class="two-col" style="margin-top:10px;flex:none">
+    <div class="concept-box" style="border-color:#c792ea55;background:#1a1030">
+      <h4 style="color:#c792ea">Dependency Injection</h4>
+      <p><span style="color:#f48771">❌ Old:</span> <code style="font-family:monospace;font-size:11px">new PrepService()</code> — you manage the object<br>
+      <span style="color:#6bffb8">✅ Spring:</span> <code style="font-family:monospace;font-size:11px">PrepService service</code> in constructor — handed to you</p>
+      <p style="margin-top:6px;color:#555;font-size:11px">🍕 You don't grow wheat to make pizza. Zomato delivers. Spring delivers.</p>
+    </div>
+    <div class="concept-box" style="border-color:#ff6b9d55;background:#1a0f18">
+      <h4 style="color:#ff6b9d">Annotations → Beans</h4>
+      <p><code style="font-family:monospace;font-size:11px">@Service</code> = business logic &nbsp;·&nbsp; <code style="font-family:monospace;font-size:11px">@Repository</code> = data access<br><code style="font-family:monospace;font-size:11px">@RestController</code> = HTTP &nbsp;·&nbsp; <code style="font-family:monospace;font-size:11px">@Entity</code> = DB table</p>
+      <p style="margin-top:6px;color:#555;font-size:11px">Spring reads these at startup, creates objects, injects where needed. You never call <code style="font-family:monospace">new</code>. Ever.</p>
+    </div>
+  </div>
+  <div class="layer-flow" style="flex:none;margin-top:10px">
+    <div class="layer"><span class="layer-icon">🧑‍💼</span><span class="layer-name" style="color:#ff6b9d">Controller</span><span class="layer-desc">Receives the HTTP request — nothing else</span></div>
+    <div class="layer-arrow">↓</div>
+    <div class="layer"><span class="layer-icon">👨‍🍳</span><span class="layer-name" style="color:#ffcb6b">Service</span><span class="layer-desc">Processes business logic — calls AI, applies rules</span></div>
+    <div class="layer-arrow">↓</div>
+    <div class="layer"><span class="layer-icon">🗄️</span><span class="layer-name" style="color:#82aaff">Repository</span><span class="layer-desc">Talks to the database — save, fetch, delete</span></div>
+  </div>
+</div>
+
+<!-- SLIDE 16: Transformation -->
+<div class="slide" id="slide-16">
+  <div class="slide-num">16 / 20</div>
+  <div class="section-label">The transformation</div>
+  <h2>Iteration 1 → Iteration 6</h2>
+  <div class="ba-row">
+    <div class="ba-box before">
+      <h4>❌ Iteration 1 — one file</h4>
+      <ul>
+        <li><span>📄</span>PrepController.java — everything crammed in</li>
+        <li><span>💥</span>Works, but messy</li>
+        <li><span>😬</span>One person can work on it</li>
+        <li><span>❌</span>No history, no persistence</li>
+        <li><span>❌</span>Untestable</li>
+      </ul>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 8px;font-size:24px;color:#444">→</div>
+    <div class="ba-box after">
+      <h4>✅ Iteration 6 — clean layers</h4>
+      <ul>
+        <li><span>🧑‍💼</span>PrepController.java — takes the request</li>
+        <li><span>👨‍🍳</span>PrepService.java — runs the logic</li>
+        <li><span>🗄️</span>PrepSessionRepository.java — talks to DB</li>
+        <li><span>💾</span>PrepSession.java — the data shape</li>
+        <li><span>✅</span>A 50-person team can work on this</li>
+      </ul>
+    </div>
+  </div>
+  <div class="info-bar">Same app. Same features. But now it's production-grade. That's what Spring teaches you.</div>
+</div>
+
+<!-- SLIDE 17: What You Built -->
+<div class="slide" id="slide-17">
+  <div class="slide-num">17 / 20</div>
+  <div class="section-label">You did it 🎉</div>
+  <h2>What you built — from scratch — today</h2>
+  <ul class="checklist">
+    <li><span class="check">✅</span>A REST API that accepts any Java/CS topic</li>
+    <li><span class="check">✅</span>Calls Google Gemini and gets 5 interview questions</li>
+    <li><span class="check">✅</span>Saves every session to an in-memory database</li>
+    <li><span class="check">✅</span>Retrieves full history on demand</li>
+    <li><span class="check">✅</span>Clean layered architecture — Controller → Service → Repository</li>
+    <li><span class="check">✅</span>OOP in every file — Encapsulation, Inheritance, Abstraction, Polymorphism</li>
+  </ul>
+  <div class="warn-bar">And you understood every line. No magic. No black box. Ek ek step mein build kiya. 🙌</div>
+</div>
+
+<!-- SLIDE 18: Clone & Run -->
+<div class="slide" id="slide-18">
+  <div class="slide-num">18 / 20</div>
+  <h2 style="text-align:center;margin-bottom:8px">Clone it. Run it. Break it.</h2>
+  <div class="big-moment" style="gap:16px">
+    <div class="emoji-xl">🛠️</div>
+    <div class="moment-action">github.com/srinivasreddyramaram/java-to-ai-backend</div>
+    <div class="tag-row" style="justify-content:center">
+      <span class="tag yellow">main → starter (you build)</span>
+      <span class="tag green">complete → finished version</span>
+    </div>
+    <p class="moment-note">Add your Gemini key → Run as Spring Boot App → Hit in Bruno<br><br>Put it on your resume tonight.</p>
+  </div>
+</div>
+
+<!-- SLIDE 19: What's Next -->
+<div class="slide" id="slide-19">
+  <div class="slide-num">19 / 20</div>
+  <div class="section-label">What's next</div>
+  <h2>Ek aur iteration? 😄</h2>
+  <div class="roadmap" style="margin-top:14px">
+    <div class="road-item"><span class="road-num" style="color:#ff6b9d">Next 1</span><span class="road-text"><strong>Add a frontend</strong> — HTML + fetch() or React. Same API, new face.</span></div>
+    <div class="road-item"><span class="road-num" style="color:#ff6b9d">Next 2</span><span class="road-text"><strong>Deploy it</strong> — Railway or Render, free hosting. Share the link in your resume.</span></div>
+    <div class="road-item"><span class="road-num" style="color:#ff6b9d">Next 3</span><span class="road-text"><strong>Try other AI APIs</strong> — Claude, OpenAI — same pattern, different key.</span></div>
+    <div class="road-item"><span class="road-num" style="color:#ff6b9d">Next 4</span><span class="road-text"><strong>Add login / user sessions</strong> — Spring Security. Each student gets their own history.</span></div>
+  </div>
+</div>
+
+<!-- SLIDE 20: Closing -->
+<div class="slide" id="slide-20">
+  <div class="slide-num">20 / 20</div>
+  <div class="section-label">Remember this</div>
+  <h2>Every senior dev started exactly here.</h2>
+  <ul class="checklist" style="margin-top:16px">
+    <li><span style="font-size:16px">☝️</span>One controller. No idea what they were doing.</li>
+    <li><span style="font-size:16px">🔧</span>Broke it. Fixed it. Added a database.</li>
+    <li><span style="font-size:16px">✂️</span>Extracted a service. Cleaned it up.</li>
+    <li><span style="font-size:16px">🚀</span>Deployed it. Put it on LinkedIn. Got the call.</li>
+  </ul>
+  <div class="warn-bar" style="margin-top:16px">The code you wrote today? That's not a tutorial. That's a project.</div>
+</div>
+
+</div><!-- slideArea -->
+
+<!-- Notes Panel -->
+<div id="notesPanel">
+  <h3>Speaker Notes</h3>
+  <div id="notesContent"></div>
+</div>
+</div><!-- main -->
+
+<script>
+const total = 20;
+let cur = 1;
+let notesOpen = false;
+
+const notes = {
+  1: `<p>Set the tone from the start — this is a build session, not a lecture. By the end they'll have a running app.</p><p>Ask: how many of you have your placement season in the next 6 months? That's your hook.</p>`,
+  2: `<p>Make this interactive. Ask them which app they'd build. The attendance calculator always gets the biggest reaction.</p><p>Land on Placement Prep — it's the most immediately useful and straightforward to build live.</p>`,
+  3: `<p>Show this in Bruno/Postman after you demo it. This slide is the promise — the working output they'll have by the end.</p>`,
+  4: `<p>Spend 30 seconds here. Two tools. That's it. No complicated setup. Free for both.</p><p>If anyone doesn't have a Gemini key yet, now is the time to get one.</p>`,
+  5: `<p>Walk through each iteration name. Not the code — just the name and the "why".</p><p>Key message: the app works after iteration 1. Everything after makes it better. There's no "broken waiting state".</p>`,
+  6: `<p>Start coding live. Blank file. This is the whole app — one controller, one method.</p><p>Don't over-explain. Just get it working. Explanation comes on the next slide.</p>`,
+  7: `<p>Pause here after iteration 1 works. "Let's talk about what Spring just did."</p><p>The three annotations are the core vocabulary. Students will see these in every Spring project they ever open.</p>`,
+  8: `<p>Let the room celebrate for a moment. First AI response is always exciting.</p><p>This is the dopamine hit — it actually works, in a real HTTP call, with real AI. Let that land.</p>`,
+  9: `<p>The JSON ugliness is immediately obvious when you run it. Let them see the raw response first, then show the cleaned version.</p><p>extractQuestions() is simple string parsing — nothing magical.</p>`,
+  10: `<p>The "selective memory" joke always lands. Every student has had that group member.</p><p>Emphasise: we're just defining the shape of the data. No Spring magic yet. It's just a POJO.</p>`,
+  11: `<p>This is the OOP callback — everything they learned in 2nd year is showing up right now.</p><p>The encapsulation point is important: it's not optional with JPA. Spring literally calls your getters. This is why private fields + getters matter.</p>`,
+  12: `<p>The zero-SQL moment always gets a reaction. Write the @Entity annotation, write the empty interface, show them it saves.</p><p>"That's it? That's it." Let the silence work.</p>`,
+  13: `<p>One-line body. Show it, run it, return the list. The simplicity is the point.</p><p>The app is now genuinely feature-complete. Everything from here is architecture, not features.</p>`,
+  14: `<p>Ask the class: "Is it okay for one class to do all of this?" Let them answer. They'll say no.</p><p>Then show the extract. The controller shrinks to almost nothing. That's the payoff.</p>`,
+  15: `<p>This is the concepts-in-context slide. DI, annotations, and layers — but all explained in terms of code they just wrote.</p><p>The Zomato/DI analogy is good for the room. Don't overthink it — just say it.</p>`,
+  16: `<p>Side by side. Same app. One file to four files. Ask: "Which would you rather maintain?"</p><p>The 50-person team point is the real-world anchor — this is how production code is structured.</p>`,
+  17: `<p>Go through the checklist slowly. Let it sink in that they built all of this in one session.</p><p>"Ek ek step mein build kiya" — the incremental approach is the whole lesson.</p>`,
+  18: `<p>Give them 2 minutes to clone and run the complete branch. Anyone who brought a laptop should have it running before they leave.</p>`,
+  19: `<p>These aren't assignments — they're natural extensions of what they built today. Each one is one afternoon of work.</p><p>Deploy is the highest-value next step for placement purposes — a live link > a GitHub repo on a resume.</p>`,
+  20: `<p>End on this. Slowly. Don't rush it.</p><p>The "got the call" moment is real — every engineer in the room has a story that started somewhere like this.</p>`
+};
+
+function showSlide(n) {
+  document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+  document.getElementById('slide-' + n).classList.add('active');
+  document.getElementById('counter').textContent = n + ' / ' + total;
+  document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+  document.getElementById('btnPrev').disabled = n === 1;
+  document.getElementById('btnNext').disabled = n === total;
+  document.getElementById('notesContent').innerHTML = notes[n] || '<p>No notes for this slide.</p>';
+}
+
+function move(dir) {
+  const next = cur + dir;
+  if (next < 1 || next > total) return;
+  cur = next;
+  showSlide(cur);
+}
+
+function toggleNotes() {
+  notesOpen = !notesOpen;
+  document.getElementById('notesPanel').classList.toggle('visible', notesOpen);
+  document.getElementById('btnNotes').style.background = notesOpen ? '#6c63ff' : '';
+  document.getElementById('btnNotes').style.color = notesOpen ? '#fff' : '';
+}
+
+function toggleFull() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); move(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+  if (e.key === 'n' || e.key === 'N') toggleNotes();
+  if (e.key === 'f' || e.key === 'F') toggleFull();
+});
+
+showSlide(1);
+</script>
+</body>
+</html>
